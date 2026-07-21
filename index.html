@@ -66,11 +66,6 @@
         .badge-warning { background: #fef3c7; color: #92400e; }
         .badge-danger { background: #fee2e2; color: #991b1b; }
 
-        .table-responsive { width: 100%; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
-        th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid var(--border-color); }
-        th { background: #f1f5f9; font-weight: 600; color: var(--text-muted); }
-
         .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 999; color: white; font-weight: bold; flex-direction: column; gap: 10px; display: none; }
         .spinner { width: 40px; height: 40px; border: 4px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -88,7 +83,6 @@
         <!-- Brand Header -->
         <div class="brand-header">
             <div class="brand-logo">
-                <!-- Bisa diganti URL logo perusahaan Anda -->
                 <span>H</span>
             </div>
             <h1>HDIR Online</h1>
@@ -103,10 +97,10 @@
                     <p style="color: var(--text-muted); font-size: 14px;">Silakan pilih menu di bawah ini untuk memulai.</p>
                 </div>
 
-                <button class="btn btn-primary" onclick="navTo('view-absensi')" style="padding: 16px; font-size: 16px;">
+                <button type="button" class="btn btn-primary" onclick="navTo('view-absensi')" style="padding: 16px; font-size: 16px;">
                     📝 Mulai Absensi
                 </button>
-                <button class="btn btn-secondary" onclick="navTo('view-login')" style="padding: 16px; font-size: 16px; background: #e0f2fe; color: #0369a1;">
+                <button type="button" class="btn btn-secondary" onclick="navTo('view-login')" style="padding: 16px; font-size: 16px; background: #e0f2fe; color: #0369a1;">
                     🔐 Login (User & Admin)
                 </button>
             </div>
@@ -115,7 +109,7 @@
             <div id="view-login" class="view">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h3 style="font-size: 16px;">Login Sistem</h3>
-                    <button class="btn btn-secondary" style="width: auto; padding: 6px 12px; font-size: 12px; margin:0;" onclick="navTo('view-home')">Kembali</button>
+                    <button type="button" class="btn btn-secondary" style="width: auto; padding: 6px 12px; font-size: 12px; margin:0;" onclick="navTo('view-home')">Kembali</button>
                 </div>
                 
                 <div class="card">
@@ -137,7 +131,7 @@
                         <input type="password" id="adminPassword" placeholder="Masukkan password admin">
                     </div>
 
-                    <button class="btn btn-primary" onclick="prosesLogin()">Masuk / Login</button>
+                    <button type="button" class="btn btn-primary" onclick="prosesLogin()">Masuk / Login</button>
                 </div>
             </div>
 
@@ -145,7 +139,7 @@
             <div id="view-absensi" class="view">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h3 style="font-size: 16px;">Form Absensi Harian</h3>
-                    <button class="btn btn-secondary" style="width: auto; padding: 6px 12px; font-size: 12px; margin:0;" onclick="navTo('view-home')">Kembali</button>
+                    <button type="button" class="btn btn-secondary" style="width: auto; padding: 6px 12px; font-size: 12px; margin:0;" onclick="navTo('view-home')">Kembali</button>
                 </div>
 
                 <div class="card">
@@ -161,7 +155,7 @@
                     <div class="form-group">
                         <label>Scan QR Code ID Karyawan:</label>
                         <div id="reader"></div>
-                        <button class="btn btn-secondary" type="button" onclick="switchCameraScanner()" style="font-size: 13px; padding: 8px;">🔄 Putar Kamera QR (Depan/Belakang)</button>
+                        <button type="button" class="btn btn-secondary" onclick="switchCameraScanner()" style="font-size: 13px; padding: 8px;">🔄 Putar Kamera QR (Depan/Belakang)</button>
                         <input type="text" id="scannedId" readonly placeholder="Hasil scan ID akan muncul di sini..." style="background: #f8fafc; font-weight: bold; margin-top: 5px;">
                     </div>
 
@@ -170,8 +164,8 @@
                         <div class="camera-container">
                             <video id="videoElement" autoplay playsinline></video>
                         </div>
-                        <button class="btn btn-secondary" type="button" onclick="toggleCameraFacing()" style="font-size: 13px; padding: 8px; margin-bottom: 8px;">🔄 Putar Kamera Selfie (Depan/Belakang)</button>
-                        <button class="btn btn-secondary" type="button" onclick="takeSnapshot()">📸 Ambil Foto Selfie</button>
+                        <button type="button" class="btn btn-secondary" onclick="toggleCameraFacing()" style="font-size: 13px; padding: 8px; margin-bottom: 8px;">🔄 Putar Kamera Selfie (Depan/Belakang)</button>
+                        <button type="button" class="btn btn-secondary" onclick="takeSnapshot()">📸 Ambil Foto Selfie</button>
                         <canvas id="canvasElement" style="display:none;"></canvas>
                         <div id="snapshotPreview" style="margin-top:8px; text-align:center;"></div>
                     </div>
@@ -182,7 +176,7 @@
                         <div id="gpsStatus" style="font-size: 11px; margin-top: 4px; color: var(--text-muted);">Menghitung jarak ke titik kantor...</div>
                     </div>
 
-                    <button class="btn btn-success" onclick="kirimAbsensi()" style="padding: 14px; font-size: 16px;">Kirim Absensi Sekarang</button>
+                    <button type="button" class="btn btn-success" onclick="kirimAbsensi()" style="padding: 14px; font-size: 16px;">Kirim Absensi Sekarang</button>
                 </div>
             </div>
 
@@ -190,14 +184,12 @@
             <div id="view-user-dashboard" class="view">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h3 style="font-size: 16px;" id="userWelcomeTitle">Riwayat Kehadiran</h3>
-                    <button class="btn btn-secondary" style="width: auto; padding: 6px 12px; font-size: 12px; margin:0;" onclick="navTo('view-home')">Keluar</button>
+                    <button type="button" class="btn btn-secondary" style="width: auto; padding: 6px 12px; font-size: 12px; margin:0;" onclick="navTo('view-home')">Keluar</button>
                 </div>
 
                 <div class="card">
                     <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Berikut adalah status riwayat kehadiran Anda di sistem:</p>
-                    <div id="userAttendanceSummary">
-                        <!-- Summary items -->
-                    </div>
+                    <div id="userAttendanceSummary"></div>
                 </div>
             </div>
 
@@ -205,7 +197,7 @@
             <div id="view-admin-dashboard" class="view">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h3 style="font-size: 16px;">Panel Administrator</h3>
-                    <button class="btn btn-secondary" style="width: auto; padding: 6px 12px; font-size: 12px; margin:0;" onclick="navTo('view-home')">Logout</button>
+                    <button type="button" class="btn btn-secondary" style="width: auto; padding: 6px 12px; font-size: 12px; margin:0;" onclick="navTo('view-home')">Logout</button>
                 </div>
 
                 <!-- Pendaftaran Karyawan (Eksklusif Admin) -->
@@ -219,13 +211,13 @@
                         <label>Jabatan:</label>
                         <input type="text" id="regJabatan" placeholder="Contoh: Staff Toko / Kasir">
                     </div>
-                    <button class="btn btn-primary" onclick="daftarKaryawan()">Daftarkan Karyawan</button>
+                    <button type="button" class="btn btn-primary" onclick="daftarKaryawan()">Daftarkan Karyawan</button>
                     <div id="regResult" style="margin-top: 10px; font-size: 12px; text-align: center; font-weight: bold;"></div>
                 </div>
 
                 <div class="card">
                     <h4 style="font-size: 15px; margin-bottom: 10px;">Menu Kontrol Admin</h4>
-                    <button class="btn btn-secondary" onclick="window.open('https://docs.google.com/spreadsheets/', '_blank')">📊 Buka Database Google Sheets</button>
+                    <button type="button" class="btn btn-secondary" onclick="window.open('https://docs.google.com/spreadsheets/', '_blank')">📊 Buka Database Google Sheets</button>
                 </div>
             </div>
         </div>
@@ -237,27 +229,28 @@
 </div>
 
 <script>
-    // URL Web App Google Apps Script Anda (Ganti dengan URL deployment terbaru)
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwlpaM5Cf1-Je_977e9MS6lTJ8zU5LWVBb2-4Y6s46GpOVuKhOrOB-J6ZyvPLtgp-dM9A/exec";
 
-    // Koordinat Kantor (Contoh: Depok, Indonesia - sesuaikan dengan titik kantor Anda)
     const OFFICE_LAT = -6.4025; 
     const OFFICE_LNG = 106.8186;
     const MAX_DISTANCE_METER = 500;
 
-    let currentFacingMode = "user"; // 'user' (depan) atau 'environment' (belakang)
+    let currentFacingMode = "user";
     let mediaStream = null;
     let fotoBase64 = "";
     let koordinatGPS = "";
     let html5QrCode = null;
     let scannerCameraFacing = "user";
 
-    // Navigasi Antar View
     function navTo(viewId) {
-        document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
-        document.getElementById(viewId).classList.add('active');
+        document.querySelectorAll('.view').forEach(function(el) {
+            el.classList.remove('active');
+        });
+        var targetView = document.getElementById(viewId);
+        if(targetView) {
+            targetView.classList.add('active');
+        }
 
-        // Reset atau inisialisasi spesifik view
         if(viewId === 'view-absensi') {
             initCamera();
             initScanner();
@@ -268,12 +261,11 @@
         }
     }
 
-    function showLoading(show, text = "Memproses...") {
-        document.getElementById('loadingText').innerText = text;
+    function showLoading(show, text) {
+        document.getElementById('loadingText').innerText = text || "Memproses...";
         document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
     }
 
-    // --- LOGIN HANDLER ---
     function toggleLoginFields() {
         let type = document.getElementById('loginType').value;
         if(type === 'admin') {
@@ -289,7 +281,7 @@
         let type = document.getElementById('loginType').value;
         if(type === 'admin') {
             let pass = document.getElementById('adminPassword').value;
-            if(pass === 'admin123' || pass === 'susujuragan') { // Password admin dapat disesuaikan
+            if(pass === 'admin123' || pass === 'susujuragan') {
                 navTo('view-admin-dashboard');
             } else {
                 alert("Password Admin Salah!");
@@ -300,12 +292,10 @@
                 alert("Masukkan ID Karyawan Anda!");
                 return;
             }
-            // Validasi & ambil data riwayat user dari Google Sheets
             fetchUserData(userId);
         }
     }
 
-    // --- KAMERA & QR SCANNER ---
     function initCamera() {
         if(mediaStream) {
             mediaStream.getTracks().forEach(track => track.stop());
@@ -313,7 +303,8 @@
         navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode } })
             .then(stream => {
                 mediaStream = stream;
-                document.getElementById('videoElement').srcObject = stream;
+                var videoElem = document.getElementById('videoElement');
+                if(videoElem) videoElem.srcObject = stream;
             })
             .catch(err => console.log("Kamera error: " + err));
     }
@@ -343,19 +334,30 @@
 
     function initScanner() {
         if(html5QrCode) {
-            html5QrCode.stop().catch(() => {});
+            html5QrCode.stop().catch(() => {}).finally(() => {
+                startScannerInstance();
+            });
+        } else {
+            startScannerInstance();
         }
-        html5QrCode = new Html5Qrcode("reader");
-        const config = { fps: 10, qrbox: { width: 220, height: 220 } };
-        html5QrCode.start(
-            { facingMode: scannerCameraFacing },
-            config,
-            qrMessage => {
-                document.getElementById('scannedId').value = qrMessage;
-                alert("ID Berhasil Dipindai: " + qrMessage);
-            },
-            err => {}
-        ).catch(err => console.log("QR Scanner error: " + err));
+    }
+
+    function startScannerInstance() {
+        try {
+            html5QrCode = new Html5Qrcode("reader");
+            const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+            html5QrCode.start(
+                { facingMode: scannerCameraFacing },
+                config,
+                qrMessage => {
+                    document.getElementById('scannedId').value = qrMessage;
+                    alert("ID Berhasil Dipindai: " + qrMessage);
+                },
+                err => {}
+            ).catch(err => console.log("QR Scanner start error: " + err));
+        } catch(e) {
+            console.log("Scanner init error: " + e);
+        }
     }
 
     function switchCameraScanner() {
@@ -369,7 +371,6 @@
         }
     }
 
-    // --- GPS & GEOFENCING ---
     function initGPS() {
         const gpsInput = document.getElementById('lokasiGPS');
         const gpsStatus = document.getElementById('gpsStatus');
@@ -386,7 +387,6 @@
             koordinatGPS = `${lat}, ${lng}`;
             gpsInput.value = koordinatGPS;
 
-            // Hitung jarak Haversine ke titik kantor
             let distance = calculateDistance(lat, lng, OFFICE_LAT, OFFICE_LNG);
             if(distance <= MAX_DISTANCE_METER) {
                 gpsStatus.innerHTML = `<span style="color:var(--success); font-weight:bold;">✓ Dalam Area Kantor (Jarak: ${Math.round(distance)} meter)</span>`;
@@ -400,7 +400,7 @@
     }
 
     function calculateDistance(lat1, lon1, lat2, lon2) {
-        let R = 6371e3; // Radius bumi dalam meter
+        let R = 6371e3;
         let dLat = (lat2 - lat1) * Math.PI / 180;
         let dLon = (lon2 - lon1) * Math.PI / 180;
         let a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -410,7 +410,6 @@
         return R * c;
     }
 
-    // --- KIRIM ABSENSI KE BACKEND ---
     function kirimAbsensi() {
         let id = document.getElementById('scannedId').value.trim();
         let status = document.getElementById('statusAbsen').value;
@@ -444,10 +443,8 @@
         });
     }
 
-    // --- FETCH RIWAYAT USER ---
     function fetchUserData(userId) {
         showLoading(true, "Memuat data kehadiran...");
-        // Memanggil API Google Apps Script untuk memeriksa riwayat user hari ini
         fetch(`${SCRIPT_URL}?action=getUserHistory&id=${userId}`)
             .then(res => res.json())
             .then(data => {
@@ -476,14 +473,12 @@
             })
             .catch(err => {
                 showLoading(false);
-                // Fallback jika fetch tanpa koneksi live, langsung arahkan dengan preview
                 document.getElementById('userWelcomeTitle').innerText = `Riwayat: ${userId}`;
                 document.getElementById('userAttendanceSummary').innerHTML = `<p style="font-size:13px; color:var(--text-muted);">Data terhubung ke server Google Sheets untuk ID: <strong>${userId}</strong></p>`;
                 navTo('view-user-dashboard');
             });
     }
 
-    // --- PENDAFTARAN KARYAWAN (ADMIN ONLY) ---
     function daftarKaryawan() {
         let nama = document.getElementById('regNama').value.trim();
         let jabatan = document.getElementById('regJabatan').value.trim();
@@ -500,7 +495,7 @@
             body: JSON.stringify(payload)
         }).then(() => {
             showLoading(false);
-            document.getElementById('regResult.innerText = "Pendaftaran Berhasil! ID Karyawan tergenerate di Google Sheets.";
+            document.getElementById('regResult').innerText = "Pendaftaran Berhasil! ID Karyawan tergenerate di Google Sheets.";
             document.getElementById('regNama').value = "";
             document.getElementById('regJabatan').value = "";
         }).catch(err => {
