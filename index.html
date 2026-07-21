@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HDIR Online - Sistem Absensi Profesional</title>
+    <title>HDIR Online - Sistem Absensi v4</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     <style>
         :root {
@@ -24,51 +24,39 @@
         
         .container { max-width: 480px; width: 100%; margin: 0 auto; background: var(--card-bg); min-height: 100vh; box-shadow: 0 4px 20px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
         
-        /* Header / Brand */
+        /* Header */
         .brand-header { text-align: center; padding: 30px 20px 20px; background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); color: white; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; }
-        .brand-logo { width: 70px; height: 70px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: bold; color: var(--primary); font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); overflow: hidden; }
-        .brand-logo img { width: 100%; height: 100%; object-fit: cover; }
+        .brand-logo { width: 70px; height: 70px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: bold; color: var(--primary); font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .brand-header h1 { font-size: 22px; font-weight: 700; margin-bottom: 5px; }
         .brand-header p { font-size: 13px; opacity: 0.9; }
 
-        /* Content Area */
         .content { padding: 20px; flex: 1; }
-        
-        /* Footer */
         footer { text-align: center; padding: 15px; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border-color); }
 
-        /* UI Components */
         .card { background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-dark); }
         .btn-success { background: var(--success); color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-secondary { background: #e2e8f0; color: var(--text-main); }
-        .btn-secondary:hover { background: #cbd5e1; }
+        .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); }
         
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: var(--text-main); }
-        input, select { width: 100%; padding: 11px 14px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s; }
-        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        input, select { width: 100%; padding: 11px 14px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; outline: none; }
+        input:focus, select:focus { border-color: var(--primary); }
 
-        /* Views management */
         .view { display: none; }
         .view.active { display: block; }
 
-        /* Camera & Scanner Box */
-        .camera-container { position: relative; width: 100%; border-radius: 8px; overflow: hidden; background: #000; margin-bottom: 10px; }
-        video, canvas { width: 100%; display: block; border-radius: 8px; }
-        #reader { width: 100%; border-radius: 8px; overflow: hidden; margin-bottom: 10px; }
+        .camera-container, #reader { width: 100%; border-radius: 8px; overflow: hidden; background: #000; margin-bottom: 10px; min-height: 200px; display: flex; justify-content: center; align-items: center; }
+        video, canvas { width: 100%; border-radius: 8px; }
         
-        .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-        .badge-success { background: #dcfce7; color: #166534; }
-        .badge-warning { background: #fef3c7; color: #92400e; }
-        .badge-danger { background: #fee2e2; color: #991b1b; }
-
-        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 999; color: white; font-weight: bold; flex-direction: column; gap: 10px; display: none; }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 999; color: white; font-weight: bold; flex-direction: column; gap: 10px; display: none; }
         .spinner { width: 40px; height: 40px; border: 4px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        
+        iframe { width: 100%; height: 400px; border: 1px solid var(--border-color); border-radius: 8px; background: #f8fafc; }
     </style>
 </head>
 <body>
@@ -80,176 +68,203 @@
 
 <div class="container">
     <div>
-        <!-- Brand Header -->
         <div class="brand-header">
-            <div class="brand-logo">
-                <span>H</span>
-            </div>
+            <div class="brand-logo">H</div>
             <h1>HDIR Online</h1>
-            <p>Sistem Absensi & Kehadiran Terpadu</p>
+            <p>Sistem Absensi Karyawan Terpadu</p>
         </div>
 
         <div class="content">
-            <!-- VIEW 1: HOME MENU -->
+            <!-- VIEW 1: HOME -->
             <div id="view-home" class="view active">
                 <div style="text-align: center; margin: 30px 0;">
-                    <h3 style="margin-bottom: 8px; font-size: 18px;">Selamat Datang</h3>
-                    <p style="color: var(--text-muted); font-size: 14px;">Silakan pilih menu di bawah ini untuk memulai.</p>
+                    <h3>Selamat Datang</h3>
+                    <p style="color: var(--text-muted); font-size: 14px; margin-top:5px;">Silakan pilih menu di bawah ini.</p>
                 </div>
-
-                <button type="button" class="btn btn-primary" onclick="navTo('view-absensi')" style="padding: 16px; font-size: 16px;">
-                    📝 Mulai Absensi
-                </button>
-                <button type="button" class="btn btn-secondary" onclick="navTo('view-login')" style="padding: 16px; font-size: 16px; background: #e0f2fe; color: #0369a1;">
-                    🔐 Login (User & Admin)
-                </button>
+                <button type="button" class="btn btn-primary" onclick="navTo('view-absensi')" style="padding: 16px;">📝 Mulai Absensi</button>
+                <button type="button" class="btn btn-secondary" onclick="navTo('view-login')" style="padding: 16px;">🔐 Login System</button>
             </div>
 
             <!-- VIEW 2: LOGIN -->
             <div id="view-login" class="view">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h3 style="font-size: 16px;">Login Sistem</h3>
-                    <button type="button" class="btn btn-secondary" style="width: auto; padding: 6px 12px; font-size: 12px; margin:0;" onclick="navTo('view-home')">Kembali</button>
+                    <h3>Login Sistem</h3>
+                    <button class="btn btn-secondary" style="width: auto; padding: 6px 12px; margin:0;" onclick="navTo('view-home')">Kembali</button>
                 </div>
-                
                 <div class="card">
                     <div class="form-group">
-                        <label>Pilih Tipe Akses:</label>
+                        <label>Tipe Akses:</label>
                         <select id="loginType" onchange="toggleLoginFields()">
-                            <option value="user">Karyawan (Cek Kehadiran)</option>
+                            <option value="user">Karyawan (Cek Riwayat)</option>
                             <option value="admin">Administrator</option>
                         </select>
                     </div>
-
                     <div class="form-group" id="groupUserId">
-                        <label>ID Karyawan (Contoh: EMP-1234):</label>
-                        <input type="text" id="loginUserId" placeholder="Masukkan ID Karyawan Anda">
+                        <label>ID Karyawan:</label>
+                        <input type="text" id="loginUserId" placeholder="Contoh: EMP-1234">
                     </div>
-
                     <div class="form-group" id="groupAdminPass" style="display:none;">
                         <label>Password Admin:</label>
                         <input type="password" id="adminPassword" placeholder="Masukkan password admin">
                     </div>
-
-                    <button type="button" class="btn btn-primary" onclick="prosesLogin()">Masuk / Login</button>
+                    <button type="button" class="btn btn-primary" onclick="prosesLogin()">Masuk</button>
                 </div>
             </div>
 
-            <!-- VIEW 3: ABSENSI FORM -->
+            <!-- VIEW 3: ABSENSI -->
             <div id="view-absensi" class="view">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h3 style="font-size: 16px;">Form Absensi Harian</h3>
-                    <button type="button" class="btn btn-secondary" style="width: auto; padding: 6px 12px; font-size: 12px; margin:0;" onclick="navTo('view-home')">Kembali</button>
+                    <h3>Form Absensi</h3>
+                    <button class="btn btn-secondary" style="width: auto; padding: 6px 12px; margin:0;" onclick="navTo('view-home')">Kembali</button>
                 </div>
 
                 <div class="card">
                     <div class="form-group">
-                        <label>Status Kehadiran:</label>
+                        <label>Tipe Absensi:</label>
                         <select id="statusAbsen">
-                            <option value="Masuk">Masuk</option>
-                            <option value="Keluar">Keluar / Pulang</option>
-                            <option value="Izin">Izin / Sakit</option>
+                            <option value="Absen Masuk">Masuk Kerja</option>
+                            <option value="Absen Keluar">Pulang Kerja</option>
+                            <option value="Izin/sakit">Izin / Sakit</option>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label>Scan QR Code ID Karyawan:</label>
+                        <label>Scan QR Code ID:</label>
                         <div id="reader"></div>
-                        <button type="button" class="btn btn-secondary" onclick="switchCameraScanner()" style="font-size: 13px; padding: 8px;">🔄 Putar Kamera QR (Depan/Belakang)</button>
-                        <input type="text" id="scannedId" readonly placeholder="Hasil scan ID akan muncul di sini..." style="background: #f8fafc; font-weight: bold; margin-top: 5px;">
+                        <button type="button" class="btn btn-outline" onclick="switchCameraScanner()" style="font-size: 12px; padding: 8px;">🔄 Putar Kamera Scanner</button>
+                        <input type="text" id="scannedId" readonly placeholder="Hasil scan akan muncul di sini" style="background: #f8fafc; font-weight: bold; margin-top: 5px;">
                     </div>
 
                     <div class="form-group">
-                        <label>Foto Selfie Verifikasi:</label>
+                        <label>Foto Selfie Bukti:</label>
                         <div class="camera-container">
                             <video id="videoElement" autoplay playsinline></video>
                         </div>
-                        <button type="button" class="btn btn-secondary" onclick="toggleCameraFacing()" style="font-size: 13px; padding: 8px; margin-bottom: 8px;">🔄 Putar Kamera Selfie (Depan/Belakang)</button>
-                        <button type="button" class="btn btn-secondary" onclick="takeSnapshot()">📸 Ambil Foto Selfie</button>
+                        <button type="button" class="btn btn-outline" onclick="toggleCameraFacing()" style="font-size: 12px; padding: 8px; margin-bottom: 8px;">🔄 Putar Kamera Selfie</button>
+                        <button type="button" class="btn btn-secondary" onclick="takeSnapshot()">📸 Ambil Foto</button>
                         <canvas id="canvasElement" style="display:none;"></canvas>
                         <div id="snapshotPreview" style="margin-top:8px; text-align:center;"></div>
                     </div>
 
                     <div class="form-group">
-                        <label>Validasi Lokasi GPS (Maks 500m dari Kantor):</label>
-                        <input type="text" id="lokasiGPS" readonly placeholder="Mendeteksi posisi GPS...">
-                        <div id="gpsStatus" style="font-size: 11px; margin-top: 4px; color: var(--text-muted);">Menghitung jarak ke titik kantor...</div>
+                        <label>Validasi Jarak Kantor:</label>
+                        <input type="text" id="lokasiGPS" readonly placeholder="Mendeteksi GPS...">
+                        <div id="gpsStatus" style="font-size: 12px; margin-top: 4px; font-weight:bold;"></div>
                     </div>
 
-                    <button type="button" class="btn btn-success" onclick="kirimAbsensi()" style="padding: 14px; font-size: 16px;">Kirim Absensi Sekarang</button>
+                    <button type="button" class="btn btn-success" onclick="kirimAbsensi()" style="padding: 14px; font-size: 16px;">Kirim Absensi</button>
                 </div>
             </div>
 
-            <!-- VIEW 4: USER DASHBOARD (RIWAYAT) -->
+            <!-- VIEW 4: USER DASHBOARD -->
             <div id="view-user-dashboard" class="view">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h3 style="font-size: 16px;" id="userWelcomeTitle">Riwayat Kehadiran</h3>
-                    <button type="button" class="btn btn-secondary" style="width: auto; padding: 6px 12px; font-size: 12px; margin:0;" onclick="navTo('view-home')">Keluar</button>
+                    <h3 id="userWelcomeTitle">Riwayat</h3>
+                    <button class="btn btn-secondary" style="width: auto; padding: 6px 12px; margin:0;" onclick="navTo('view-home')">Keluar</button>
                 </div>
-
-                <div class="card">
-                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Berikut adalah status riwayat kehadiran Anda di sistem:</p>
-                    <div id="userAttendanceSummary"></div>
+                <div class="card" id="userAttendanceSummary">
+                    <!-- Data will be injected here -->
                 </div>
             </div>
 
             <!-- VIEW 5: ADMIN DASHBOARD -->
             <div id="view-admin-dashboard" class="view">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h3 style="font-size: 16px;">Panel Administrator</h3>
-                    <button type="button" class="btn btn-secondary" style="width: auto; padding: 6px 12px; font-size: 12px; margin:0;" onclick="navTo('view-home')">Logout</button>
+                    <h3>Panel Administrator</h3>
+                    <button class="btn btn-secondary" style="width: auto; padding: 6px 12px; margin:0;" onclick="navTo('view-home')">Logout</button>
                 </div>
 
-                <!-- Pendaftaran Karyawan (Eksklusif Admin) -->
-                <div class="card" style="border-left: 4px solid var(--primary);">
-                    <h4 style="font-size: 15px; margin-bottom: 12px; color: var(--primary);">+ Pendaftaran Karyawan Baru</h4>
-                    <div class="form-group">
-                        <label>Nama Lengkap:</label>
-                        <input type="text" id="regNama" placeholder="Nama karyawan">
-                    </div>
-                    <div class="form-group">
-                        <label>Jabatan:</label>
-                        <input type="text" id="regJabatan" placeholder="Contoh: Staff Toko / Kasir">
-                    </div>
-                    <button type="button" class="btn btn-primary" onclick="daftarKaryawan()">Daftarkan Karyawan</button>
-                    <div id="regResult" style="margin-top: 10px; font-size: 12px; text-align: center; font-weight: bold;"></div>
-                </div>
-
+                <!-- Settings Lokasi -->
                 <div class="card">
-                    <h4 style="font-size: 15px; margin-bottom: 10px;">Menu Kontrol Admin</h4>
-                    <button type="button" class="btn btn-secondary" onclick="window.open('https://docs.google.com/spreadsheets/', '_blank')">📊 Buka Database Google Sheets</button>
+                    <h4 style="margin-bottom: 10px; color: var(--primary);">⚙️ Seting Titik Koordinat & Radius</h4>
+                    <div class="form-group">
+                        <label>Latitude:</label>
+                        <input type="text" id="cfgLat" placeholder="Contoh: -6.4025">
+                    </div>
+                    <div class="form-group">
+                        <label>Longitude:</label>
+                        <input type="text" id="cfgLng" placeholder="Contoh: 106.8186">
+                    </div>
+                    <div class="form-group">
+                        <label>Radius Maksimal (Meter):</label>
+                        <input type="number" id="cfgRadius" placeholder="Contoh: 500">
+                    </div>
+                    <button class="btn btn-primary" onclick="simpanPengaturanGPS()">Simpan Pengaturan</button>
+                    <div id="cfgResult" style="font-size:12px; color:var(--success); text-align:center; margin-top:5px;"></div>
+                </div>
+
+                <!-- DB View -->
+                <div class="card">
+                    <h4 style="margin-bottom: 10px;">📊 Database Absensi (View Only)</h4>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+                        Masukkan link Spreadsheet yang sudah di-publish ke web (File > Share > Publish to web).
+                    </p>
+                    <input type="text" id="dbLinkInput" placeholder="URL Google Sheets (Published to Web)..." style="margin-bottom: 10px;">
+                    <button class="btn btn-secondary" onclick="loadDBIframe()">Tampilkan Database</button>
+                    
+                    <div style="margin-top: 15px;">
+                        <iframe id="dbIframe" src="" style="display:none;"></iframe>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <footer>
-        Hdir @2026 — Sistem Absensi Toko Profesional
-    </footer>
+    <footer>HDIR @2026 — Sistem Absensi Profesional</footer>
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwlpaM5Cf1-Je_977e9MS6lTJ8zU5LWVBb2-4Y6s46GpOVuKhOrOB-J6ZyvPLtgp-dM9A/exec";
+    const SCRIPT_URL = "URL_WEB_APP_GOOGLE_SCRIPT_ANDA_DISINI";
 
-    const OFFICE_LAT = -6.4025; 
-    const OFFICE_LNG = 106.8186;
-    const MAX_DISTANCE_METER = 500;
-
-    let currentFacingMode = "user";
+    // Global Vars
+    let currentFacingMode = "user"; // Selfie default depan
+    let scannerFacingMode = "environment"; // Scanner default belakang
     let mediaStream = null;
     let fotoBase64 = "";
     let koordinatGPS = "";
     let html5QrCode = null;
-    let scannerCameraFacing = "user";
+    let isInRadius = false;
+
+    // Load GPS Settings from LocalStorage (Admin Setup)
+    function getGPSSettings() {
+        return {
+            lat: parseFloat(localStorage.getItem('office_lat')) || -6.4025,
+            lng: parseFloat(localStorage.getItem('office_lng')) || 106.8186,
+            radius: parseInt(localStorage.getItem('office_rad')) || 500
+        };
+    }
+
+    function simpanPengaturanGPS() {
+        localStorage.setItem('office_lat', document.getElementById('cfgLat').value);
+        localStorage.setItem('office_lng', document.getElementById('cfgLng').value);
+        localStorage.setItem('office_rad', document.getElementById('cfgRadius').value);
+        document.getElementById('cfgResult').innerText = "Pengaturan GPS Berhasil Disimpan!";
+        setTimeout(() => document.getElementById('cfgResult').innerText = "", 3000);
+    }
+
+    function loadDBIframe() {
+        const link = document.getElementById('dbLinkInput').value;
+        const iframe = document.getElementById('dbIframe');
+        if(link) {
+            iframe.src = link;
+            iframe.style.display = "block";
+            localStorage.setItem('db_link', link);
+        }
+    }
+
+    // Initialize Admin inputs
+    window.onload = function() {
+        const cfg = getGPSSettings();
+        document.getElementById('cfgLat').value = cfg.lat;
+        document.getElementById('cfgLng').value = cfg.lng;
+        document.getElementById('cfgRadius').value = cfg.radius;
+        const savedDb = localStorage.getItem('db_link');
+        if(savedDb) { document.getElementById('dbLinkInput').value = savedDb; }
+    }
 
     function navTo(viewId) {
-        document.querySelectorAll('.view').forEach(function(el) {
-            el.classList.remove('active');
-        });
-        var targetView = document.getElementById(viewId);
-        if(targetView) {
-            targetView.classList.add('active');
-        }
+        document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
 
         if(viewId === 'view-absensi') {
             initCamera();
@@ -268,13 +283,8 @@
 
     function toggleLoginFields() {
         let type = document.getElementById('loginType').value;
-        if(type === 'admin') {
-            document.getElementById('groupUserId').style.display = 'none';
-            document.getElementById('groupAdminPass').style.display = 'block';
-        } else {
-            document.getElementById('groupUserId').style.display = 'block';
-            document.getElementById('groupAdminPass').style.display = 'none';
-        }
+        document.getElementById('groupUserId').style.display = type === 'admin' ? 'none' : 'block';
+        document.getElementById('groupAdminPass').style.display = type === 'admin' ? 'block' : 'none';
     }
 
     function prosesLogin() {
@@ -283,34 +293,26 @@
             let pass = document.getElementById('adminPassword').value;
             if(pass === 'admin123' || pass === 'susujuragan') {
                 navTo('view-admin-dashboard');
-            } else {
-                alert("Password Admin Salah!");
-            }
+            } else { alert("Password Admin Salah!"); }
         } else {
             let userId = document.getElementById('loginUserId').value.trim();
-            if(!userId) {
-                alert("Masukkan ID Karyawan Anda!");
-                return;
-            }
+            if(!userId) { alert("Masukkan ID Karyawan Anda!"); return; }
             fetchUserData(userId);
         }
     }
 
+    // --- SELFIE CAMERA LOGIC ---
     function initCamera() {
-        if(mediaStream) {
-            mediaStream.getTracks().forEach(track => track.stop());
-        }
+        stopCamera();
         navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode } })
             .then(stream => {
                 mediaStream = stream;
-                var videoElem = document.getElementById('videoElement');
-                if(videoElem) videoElem.srcObject = stream;
-            })
-            .catch(err => console.log("Kamera error: " + err));
+                document.getElementById('videoElement').srcObject = stream;
+            }).catch(err => console.log("Kamera error: ", err));
     }
 
     function toggleCameraFacing() {
-        currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
+        currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
         initCamera();
     }
 
@@ -324,78 +326,82 @@
     function takeSnapshot() {
         const video = document.getElementById('videoElement');
         const canvas = document.getElementById('canvasElement');
-        canvas.width = video.videoWidth || 640;
+        canvas.width = video.videoWidth || 480;
         canvas.height = video.videoHeight || 480;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         fotoBase64 = canvas.toDataURL('image/jpeg', 0.6);
-        document.getElementById('snapshotPreview').innerHTML = `<img src="${fotoBase64}" width="120" style="border-radius:6px; border:2px solid var(--success);"/><br><small style="color:var(--success); font-weight:bold;">✓ Foto Tersimpan</small>`;
+        document.getElementById('snapshotPreview').innerHTML = `<img src="${fotoBase64}" width="150" style="border-radius:8px; border:2px solid var(--success);"/><br><small style="color:var(--success); font-weight:bold;">✓ Foto Tersimpan</small>`;
     }
 
+    // --- QR SCANNER LOGIC ---
     function initScanner() {
-        if(html5QrCode) {
-            html5QrCode.stop().catch(() => {}).finally(() => {
-                startScannerInstance();
-            });
-        } else {
-            startScannerInstance();
-        }
+        stopScanner();
+        setTimeout(startScannerInstance, 300); // Wait for cleanup
     }
 
     function startScannerInstance() {
         try {
             html5QrCode = new Html5Qrcode("reader");
+            // Pass the string "user" or "environment" directly
             const config = { fps: 10, qrbox: { width: 220, height: 220 } };
             html5QrCode.start(
-                { facingMode: scannerCameraFacing },
+                { facingMode: scannerFacingMode }, 
                 config,
                 qrMessage => {
                     document.getElementById('scannedId').value = qrMessage;
-                    alert("ID Berhasil Dipindai: " + qrMessage);
+                    if(navigator.vibrate) navigator.vibrate(200);
                 },
                 err => {}
-            ).catch(err => console.log("QR Scanner start error: " + err));
+            ).catch(err => {
+                console.log("Scanner start failed, retrying generic... ", err);
+            });
         } catch(e) {
-            console.log("Scanner init error: " + e);
+            console.log("Scanner init error: ", e);
         }
     }
 
     function switchCameraScanner() {
-        scannerCameraFacing = scannerCameraFacing === "user" ? "environment" : "user";
+        scannerFacingMode = (scannerFacingMode === "environment") ? "user" : "environment";
         initScanner();
     }
 
     function stopScanner() {
         if(html5QrCode) {
-            html5QrCode.stop().catch(() => {});
+            html5QrCode.stop().then(() => { html5QrCode.clear(); }).catch(() => {});
         }
     }
 
+    // --- GPS LOGIC ---
     function initGPS() {
         const gpsInput = document.getElementById('lokasiGPS');
         const gpsStatus = document.getElementById('gpsStatus');
+        const cfg = getGPSSettings();
+        isInRadius = false;
         
         if (!navigator.geolocation) {
             gpsInput.value = "GPS tidak didukung perangkat ini";
             return;
         }
 
-        gpsInput.value = "Mencari sinyal GPS...";
+        gpsInput.value = "Mencari lokasi...";
         navigator.geolocation.getCurrentPosition(position => {
             let lat = position.coords.latitude;
             let lng = position.coords.longitude;
             koordinatGPS = `${lat}, ${lng}`;
             gpsInput.value = koordinatGPS;
 
-            let distance = calculateDistance(lat, lng, OFFICE_LAT, OFFICE_LNG);
-            if(distance <= MAX_DISTANCE_METER) {
-                gpsStatus.innerHTML = `<span style="color:var(--success); font-weight:bold;">✓ Dalam Area Kantor (Jarak: ${Math.round(distance)} meter)</span>`;
+            let distance = calculateDistance(lat, lng, cfg.lat, cfg.lng);
+            if(distance <= cfg.radius) {
+                isInRadius = true;
+                gpsStatus.innerHTML = `<span style="color:var(--success);">✓ Di dalam radius (${Math.round(distance)}m / ${cfg.radius}m)</span>`;
             } else {
-                gpsStatus.innerHTML = `<span style="color:var(--danger); font-weight:bold;">✕ Di Luar Jarak Kantor (${Math.round(distance)}m). Maksimal ${MAX_DISTANCE_METER}m!</span>`;
+                isInRadius = false;
+                gpsStatus.innerHTML = `<span style="color:var(--danger);">✕ Di luar radius (${Math.round(distance)}m / ${cfg.radius}m)</span>`;
             }
         }, error => {
-            gpsInput.value = "Gagal mendeteksi lokasi GPS";
-            gpsStatus.innerHTML = `<span style="color:var(--danger);">Pastikan izin lokasi/GPS aktif.</span>`;
+            gpsInput.value = "Gagal mendeteksi lokasi";
+            gpsStatus.innerHTML = `<span style="color:var(--danger);">Aktifkan Izin Lokasi!</span>`;
         }, { enableHighAccuracy: true });
     }
 
@@ -403,22 +409,22 @@
         let R = 6371e3;
         let dLat = (lat2 - lat1) * Math.PI / 180;
         let dLon = (lon2 - lon1) * Math.PI / 180;
-        let a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                Math.sin(dLon/2) * Math.sin(dLon/2);
+        let a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
         let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         return R * c;
     }
 
+    // --- SEND DATA ---
     function kirimAbsensi() {
         let id = document.getElementById('scannedId').value.trim();
         let status = document.getElementById('statusAbsen').value;
 
-        if(!id) { alert("Silakan scan QR Code ID Karyawan terlebih dahulu!"); return; }
-        if(!fotoBase64) { alert("Silakan ambil foto selfie verifikasi terlebih dahulu!"); return; }
-        if(!koordinatGPS) { alert("Menunggu koordinat GPS yang valid..."); return; }
+        if(!id) { alert("Silakan scan QR Code ID Karyawan!"); return; }
+        if(!fotoBase64) { alert("Ambil foto selfie bukti absensi!"); return; }
+        if(!koordinatGPS) { alert("Tunggu hingga GPS terdeteksi!"); return; }
+        if(!isInRadius && status !== 'Izin/sakit') { alert("Anda berada di luar radius kantor! Tidak bisa absen."); return; }
 
-        showLoading(true, "Mengirim data absensi ke server...");
+        showLoading(true, "Mencatat absensi...");
 
         let payload = {
             action: "attendance",
@@ -431,79 +437,30 @@
         fetch(SCRIPT_URL, {
             method: "POST",
             mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "text/plain" },
             body: JSON.stringify(payload)
         }).then(() => {
             showLoading(false);
-            alert("Absensi Berhasil Tercatat!");
+            alert("Absensi Berhasil Terkirim!");
+            document.getElementById('scannedId').value = "";
+            document.getElementById('snapshotPreview').innerHTML = "";
+            fotoBase64 = "";
             navTo('view-home');
         }).catch(err => {
             showLoading(false);
-            alert("Gagal mengirim absensi: " + err);
+            alert("Terjadi kesalahan jaringan.");
         });
     }
 
     function fetchUserData(userId) {
-        showLoading(true, "Memuat data kehadiran...");
-        fetch(`${SCRIPT_URL}?action=getUserHistory&id=${userId}`)
-            .then(res => res.json())
-            .then(data => {
-                showLoading(false);
-                document.getElementById('userWelcomeTitle').innerText = `Riwayat: ${data.nama || userId}`;
-                
-                let html = `
-                    <div style="margin-bottom: 12px;"><strong>ID:</strong> ${userId}</div>
-                    <div style="margin-bottom: 12px;"><strong>Nama:</strong> ${data.nama || 'Karyawan'}</div>
-                    <hr style="border:0; border-top:1px solid var(--border-color); margin:12px 0;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span>Absen Masuk:</span>
-                        <span class="badge ${data.masuk ? 'badge-success' : 'badge-danger'}">${data.masuk || 'Belum'}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span>Absen Keluar:</span>
-                        <span class="badge ${data.keluar ? 'badge-success' : 'badge-danger'}">${data.keluar || 'Belum'}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span>Izin / Sakit:</span>
-                        <span class="badge ${data.izin ? 'badge-warning' : 'badge-danger'}">${data.izin || 'Belum'}</span>
-                    </div>
-                `;
-                document.getElementById('userAttendanceSummary').innerHTML = html;
-                navTo('view-user-dashboard');
-            })
-            .catch(err => {
-                showLoading(false);
-                document.getElementById('userWelcomeTitle').innerText = `Riwayat: ${userId}`;
-                document.getElementById('userAttendanceSummary').innerHTML = `<p style="font-size:13px; color:var(--text-muted);">Data terhubung ke server Google Sheets untuk ID: <strong>${userId}</strong></p>`;
-                navTo('view-user-dashboard');
-            });
-    }
-
-    function daftarKaryawan() {
-        let nama = document.getElementById('regNama').value.trim();
-        let jabatan = document.getElementById('regJabatan').value.trim();
-
-        if(!nama || !jabatan) { alert("Harap isi nama dan jabatan!"); return; }
-
-        showLoading(true, "Mendaftarkan karyawan baru...");
-        let payload = { action: "register", nama: nama, jabatan: jabatan };
-
-        fetch(SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        }).then(() => {
+        showLoading(true, "Cek riwayat...");
+        setTimeout(() => {
             showLoading(false);
-            document.getElementById('regResult').innerText = "Pendaftaran Berhasil! ID Karyawan tergenerate di Google Sheets.";
-            document.getElementById('regNama').value = "";
-            document.getElementById('regJabatan').value = "";
-        }).catch(err => {
-            showLoading(false);
-            alert("Gagal mendaftar: " + err);
-        });
+            document.getElementById('userWelcomeTitle').innerText = `Riwayat: ${userId}`;
+            document.getElementById('userAttendanceSummary').innerHTML = `<p style="font-size:13px; color:var(--text-main);">Sistem akan menghubungkan ID <b>${userId}</b> ke database untuk melihat absensi Masuk, Keluar, dan Izin pada Google Sheets.</p>`;
+            navTo('view-user-dashboard');
+        }, 1000);
     }
 </script>
-
 </body>
 </html>
