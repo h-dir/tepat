@@ -1,183 +1,39 @@
-/***********************
-  Code.gs - Aplikasi Absensi Gratis (Revisi)
-***********************/
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Aplikasi Absensi</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;padding:12px}
+    .section{border:1px solid #ddd;padding:12px;margin-bottom:12px;border-radius:6px}
+    button{padding:8px 12px;margin:6px 0}
+    input,select{padding:6px;margin:6px 0;width:100%}
+    #video{width:100%;max-width:360px}
+    .small{font-size:12px;color:#666}
+  </style>
+</head>
+<body>
+  <h2>Aplikasi Absensi (Versi Gratis)</h2>
 
-// ====== Konfigurasi ======
-const DRIVE_FOLDER_ID = '1mCul-26L2i-UZh0jwRk6crUAfZVCcXyt'; // ganti dengan Folder ID Google Drive
-const EMPLOYEES_SHEET_NAME = 'Employees';
-const ATTENDANCE_SHEET_NAME = 'Absensi';
-const OFFICE_LAT = -6.900000; // ganti koordinat kantor
-const OFFICE_LNG = 107.600000;
-const OFFICE_RADIUS_METERS = 500;
-const ADMIN_USERNAME = 'admin';
-const ADMIN_PASSWORD_PLAIN = 'admin726'; // ganti password admin awal
-const ADMIN_PASSWORD_HASH = sha256Hex(ADMIN_PASSWORD_PLAIN);
-// ==========================
+  <div class="section" id="loginSection">
+    <h3>Admin Login</h3>
+    <input id="adminUser" placeholder="Username" value="admin">
+    <input id="adminPass" placeholder="Password" type="password">
+    <button onclick="adminLogin()">Login sebagai Admin</button>
+    <div id="adminMsg" class="small"></div>
+  </div>
 
-// Fungsi hash SHA-256 → hex
-function sha256Hex(str){
-  const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, str);
-  return digest.map(b => ('0' + (b & 0xFF).toString(16)).slice(-2)).join('');
-}
+  <div class="section" id="adminPanel" style="display:none">
+    <h3>Dashboard Admin</h3>
+    <button onclick="showCreateEmployee()">Buat Karyawan Baru</button>
+    <button onclick="loadEmployees()">Muat Daftar Karyawan</button>
+    <button onclick="downloadReport('today')">Laporan Hari Ini (Download)</button>
+    <div id="adminArea"></div>
+  </div>
 
-// Ambil sheet
-function getSheets() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  return {
-    employees: ss.getSheetByName(EMPLOYEES_SHEET_NAME),
-    attendance: ss.getSheetByName(ATTENDANCE_SHEET_NAME)
-  };
-}
-
-// Cari karyawan
-function findEmployeeRow(employeeId) {
-  const { employees } = getSheets();
-  const data = employees.getDataRange().getValues();
-  for (let i = 1; i < data.length; i++) {
-    if (String(data[i][0]) === String(employeeId)) return i + 1;
-  }
-  return -1;
-}
-
-// Cari absensi
-function findAttendanceRow(employeeId, dateStr) {
-  const { attendance } = getSheets();
-  const data = attendance.getDataRange().getValues();
-  for (let i = 1; i < data.length; i++) {
-    const rowDate = data[i][0];
-    const rowEmp = String(data[i][1]);
-    if (!rowDate) continue;
-    const rowDateStr = Utilities.formatDate(new Date(rowDate), Session.getScriptTimeZone(), 'yyyy-MM-dd');
-    if (rowDateStr === dateStr && rowEmp === String(employeeId)) return i + 1;
-  }
-  return -1;
-}
-
-// Hitung jarak
-function haversineDistance(lat1, lon1, lat2, lon2) {
-  function toRad(deg){ return deg * Math.PI / 180; }
-  const R = 6371000;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R * c;
-}
-
-// Upload foto ke Drive
-function uploadPhotoBase64(base64Data, filename) {
-  const folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
-  let data = base64Data;
-  if (data.indexOf(',') > -1) data = data.split(',')[1];
-  const content = Utilities.base64Decode(data);
-  const blob = Utilities.newBlob(content, 'image/jpeg', filename);
-  const file = folder.createFile(blob);
-  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  return file.getUrl();
-}
-
-// Tambah/update absensi
-function appendOrUpdateAttendance(employeeId, payload) {
-  const { attendance, employees } = getSheets();
-  const today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
-  const rowIndex = findAttendanceRow(employeeId, today);
-  if (rowIndex === -1) {
-    const empRow = findEmployeeRow(employeeId);
-    const empData = empRow > 0 ? employees.getRange(empRow,1,1,employees.getLastColumn()).getValues()[0] : [];
-    const name = empData[1] || '';
-    const dept = empData[2] || '';
-    const newRow = [
-      new Date(today),
-      employeeId,
-      name,
-      dept,
-      payload.status || '',
-      payload.timeIn || '',
-      payload.photoIn || '',
-      payload.timeOut || '',
-      payload.photoOut || '',
-      payload.timeRequest || '',
-      payload.photoRequest || '',
-      payload.latIn || '',
-      payload.lngIn || '',
-      payload.latOut || '',
-      payload.lngOut || '',
-      payload.note || '',
-      new Date()
-    ];
-    attendance.appendRow(newRow);
-    return { action: 'append' };
-  } else {
-    const range = attendance.getRange(rowIndex,1,1,attendance.getLastColumn());
-    const row = range.getValues()[0];
-    if (payload.status) row[4] = payload.status;
-    if (payload.timeIn) row[5] = payload.timeIn;
-    if (payload.photoIn) row[6] = payload.photoIn;
-    if (payload.timeOut) row[7] = payload.timeOut;
-    if (payload.photoOut) row[8] = payload.photoOut;
-    if (payload.timeRequest) row[9] = payload.timeRequest;
-    if (payload.photoRequest) row[10] = payload.photoRequest;
-    if (payload.latIn) row[11] = payload.latIn;
-    if (payload.lngIn) row[12] = payload.lngIn;
-    if (payload.latOut) row[13] = payload.latOut;
-    if (payload.lngOut) row[14] = payload.lngOut;
-    if (payload.note) row[15] = payload.note;
-    row[16] = new Date();
-    range.setValues([row]);
-    return { action: 'update' };
-  }
-}
-
-// ===== Web App =====
-function doGet(e) {
-  return HtmlService.createHtmlOutputFromFile('Index').setTitle('Aplikasi Absensi');
-}
-
-function doPost(e) {
-  try {
-    const params = JSON.parse(e.postData.contents);
-    const action = params.action || '';
-    if (action === 'checkin') return handleCheckIn(params);
-    if (action === 'checkout') return handleCheckOut(params);
-    if (action === 'admin_login') return handleAdminLogin(params);
-    if (action === 'admin_create_employee') return handleAdminCreateEmployee(params);
-    if (action === 'admin_reset_password') return handleAdminResetPassword(params);
-    if (action === 'get_employees') return handleGetEmployees(params);
-    if (action === 'get_attendance_report') return handleGetAttendanceReport(params);
-    return ContentService.createTextOutput(JSON.stringify({ error: 'Unknown action' })).setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ error: err.message })).setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-// ===== Handlers =====
-function handleAdminLogin(params) {
-  const username = params.username;
-  const password = params.password || '';
-  const hash = sha256Hex(password);
-  if (username === ADMIN_USERNAME && hash === ADMIN_PASSWORD_HASH) {
-    return ContentService.createTextOutput(JSON.stringify({ success: true, role: 'admin' })).setMimeType(ContentService.MimeType.JSON);
-  } else {
-    return ContentService.createTextOutput(JSON.stringify({ success: false, error: 'Invalid credentials' })).setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-function handleAdminCreateEmployee(params) {
-  const emp = params.employee;
-  if (!emp || !emp.employeeId) return ContentService.createTextOutput(JSON.stringify({ error: 'Missing employee data' })).setMimeType(ContentService.MimeType.JSON);
-  const { employees } = getSheets();
-  if (findEmployeeRow(emp.employeeId) !== -1) return ContentService.createTextOutput(JSON.stringify({ error: 'EmployeeID exists' })).setMimeType(ContentService.MimeType.JSON);
-  const pwd = emp.password || Math.random().toString(36).slice(-8);
-  const pwdHash = sha256Hex(pwd);
-  employees.appendRow([emp.employeeId, emp.name || '', emp.department || '', emp.email || '', emp.phone || '', pwdHash, emp.role || 'karyawan', true]);
-  return ContentService.createTextOutput(JSON.stringify({ success: true, password: pwd })).setMimeType(ContentService.MimeType.JSON);
-}
-
-function handleAdminResetPassword(params) {
-  const employeeId = params.employeeId;
-  const newPassword = params.newPassword || Math.random().toString(36).slice(-8);
-  const row = findEmployeeRow(employeeId);
-  if (row === -1) return ContentService.createTextOutput(JSON.stringify({ error: 'Employee not found' })).setMimeType(ContentService.MimeType.JSON);
-  const { employees } = getSheets();
-  employees.getRange(row,6).setValue(sha256Hex(newPassword));
-  return ContentService.createTextOutput(JSON.stringify({ success: true, password
+  <div class="section">
+    <h3>Absensi Karyawan</h3>
+    <div id="qrArea">
+      <p class="small">Scan QR atau masukkan EmployeeID</p>
+      <input id="employeeIdInput" placeholder="EmployeeID (atau scan QR)">
+      <button onclick="startQR()">Scan QR</button>
