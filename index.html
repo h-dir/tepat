@@ -3,164 +3,428 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Absensi Toko</title>
+    <title>HDIR Online - Sistem Absensi Profesional</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; background: #f4f4f9; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #007bff; }
-        .tab { display: flex; justify-content: space-around; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
-        .tab button { background: none; border: none; font-size: 16px; font-weight: bold; cursor: pointer; color: #666; }
-        .tab button.active { color: #007bff; border-bottom: 2px solid #007bff; padding-bottom: 6px; }
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: var(--bg-color); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; }
+        
+        .container { max-width: 480px; width: 100%; margin: 0 auto; background: var(--card-bg); min-height: 100vh; box-shadow: 0 4px 20px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+        
+        /* Header / Brand */
+        .brand-header { text-align: center; padding: 30px 20px 20px; background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); color: white; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; }
+        .brand-logo { width: 70px; height: 70px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: bold; color: var(--primary); font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); overflow: hidden; }
+        .brand-logo img { width: 100%; height: 100%; object-fit: cover; }
+        .brand-header h1 { font-size: 22px; font-weight: 700; margin-bottom: 5px; }
+        .brand-header p { font-size: 13px; opacity: 0.9; }
+
+        /* Content Area */
+        .content { padding: 20px; flex: 1; }
+        
+        /* Footer */
+        footer { text-align: center; padding: 15px; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border-color); }
+
+        /* UI Components */
+        .card { background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-secondary { background: #e2e8f0; color: var(--text-main); }
+        .btn-secondary:hover { background: #cbd5e1; }
+        
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, select { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        button.btn { width: 100%; background: #007bff; color: white; border: none; padding: 10px; border-radius: 4px; font-size: 16px; cursor: pointer; }
-        button.btn:hover { background: #0056b3; }
-        .section { display: none; }
-        .section.active { display: block; }
-        #reader { width: 100%; margin-bottom: 15px; }
-        video, canvas { width: 100%; border-radius: 4px; margin-bottom: 10px; }
+        label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: var(--text-main); }
+        input, select { width: 100%; padding: 11px 14px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s; }
+        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+        /* Views management */
+        .view { display: none; }
+        .view.active { display: block; }
+
+        /* Camera & Scanner Box */
+        .camera-container { position: relative; width: 100%; border-radius: 8px; overflow: hidden; background: #000; margin-bottom: 10px; }
+        video, canvas { width: 100%; display: block; border-radius: 8px; }
+        #reader { width: 100%; border-radius: 8px; overflow: hidden; margin-bottom: 10px; }
+        
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .badge-success { background: #dcfce7; color: #166534; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+
+        .table-responsive { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+        th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: #f1f5f9; font-weight: 600; color: var(--text-muted); }
+
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 999; color: white; font-weight: bold; flex-direction: column; gap: 10px; display: none; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div id="loadingText">Memproses...</div>
+</div>
+
 <div class="container">
-    <h2>Sistem Absensi Toko</h2>
-    
-    <div class="tab">
-        <button class="tab-btn active" onclick="switchTab('absensi')">Absensi</button>
-        <button class="tab-btn" onclick="switchTab('register')">Pendaftaran Karyawan</button>
+    <div>
+        <!-- Brand Header -->
+        <div class="brand-header">
+            <div class="brand-logo">
+                <!-- Bisa diganti URL logo perusahaan Anda -->
+                <span>H</span>
+            </div>
+            <h1>HDIR Online</h1>
+            <p>Sistem Absensi & Kehadiran Terpadu</p>
+        </div>
+
+        <div class="content">
+            <!-- VIEW 1: HOME MENU -->
+            <div id="view-home" class="view active">
+                <div style="text-align: center; margin: 30px 0;">
+                    <h3 style="margin-bottom: 8px; font-size: 18px;">Selamat Datang</h3>
+                    <p style="color: var(--text-muted); font-size: 14px;">Silakan pilih menu di bawah ini untuk memulai.</p>
+                </div>
+
+                <button class="btn btn-primary" onclick="navTo('view-absensi')" style="padding: 16px; font-size: 16px;">
+                    📝 Mulai Absensi
+                </button>
+                <button class="btn btn-secondary" onclick="navTo('view-login')" style="padding: 16px; font-size: 16px; background: #e0f2fe; color: #0369a1;">
+                    🔐 Login (User & Admin)
+                </button>
+            </div>
+
+            <!-- VIEW 2: LOGIN -->
+            <div id="view-login" class="view">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="font-size: 16px;">Login Sistem</h3>
+                    <button class="btn btn-secondary" style="width: auto; padding: 6px 12px; font-size: 12px; margin:0;" onclick="navTo('view-home')">Kembali</button>
+                </div>
+                
+                <div class="card">
+                    <div class="form-group">
+                        <label>Pilih Tipe Akses:</label>
+                        <select id="loginType" onchange="toggleLoginFields()">
+                            <option value="user">Karyawan (Cek Kehadiran)</option>
+                            <option value="admin">Administrator</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="groupUserId">
+                        <label>ID Karyawan (Contoh: EMP-1234):</label>
+                        <input type="text" id="loginUserId" placeholder="Masukkan ID Karyawan Anda">
+                    </div>
+
+                    <div class="form-group" id="groupAdminPass" style="display:none;">
+                        <label>Password Admin:</label>
+                        <input type="password" id="adminPassword" placeholder="Masukkan password admin">
+                    </div>
+
+                    <button class="btn btn-primary" onclick="prosesLogin()">Masuk / Login</button>
+                </div>
+            </div>
+
+            <!-- VIEW 3: ABSENSI FORM -->
+            <div id="view-absensi" class="view">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="font-size: 16px;">Form Absensi Harian</h3>
+                    <button class="btn btn-secondary" style="width: auto; padding: 6px 12px; font-size: 12px; margin:0;" onclick="navTo('view-home')">Kembali</button>
+                </div>
+
+                <div class="card">
+                    <div class="form-group">
+                        <label>Status Kehadiran:</label>
+                        <select id="statusAbsen">
+                            <option value="Masuk">Masuk</option>
+                            <option value="Keluar">Keluar / Pulang</option>
+                            <option value="Izin">Izin / Sakit</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Scan QR Code ID Karyawan:</label>
+                        <div id="reader"></div>
+                        <button class="btn btn-secondary" type="button" onclick="switchCameraScanner()" style="font-size: 13px; padding: 8px;">🔄 Putar Kamera QR (Depan/Belakang)</button>
+                        <input type="text" id="scannedId" readonly placeholder="Hasil scan ID akan muncul di sini..." style="background: #f8fafc; font-weight: bold; margin-top: 5px;">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Foto Selfie Verifikasi:</label>
+                        <div class="camera-container">
+                            <video id="videoElement" autoplay playsinline></video>
+                        </div>
+                        <button class="btn btn-secondary" type="button" onclick="toggleCameraFacing()" style="font-size: 13px; padding: 8px; margin-bottom: 8px;">🔄 Putar Kamera Selfie (Depan/Belakang)</button>
+                        <button class="btn btn-secondary" type="button" onclick="takeSnapshot()">📸 Ambil Foto Selfie</button>
+                        <canvas id="canvasElement" style="display:none;"></canvas>
+                        <div id="snapshotPreview" style="margin-top:8px; text-align:center;"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Validasi Lokasi GPS (Maks 500m dari Kantor):</label>
+                        <input type="text" id="lokasiGPS" readonly placeholder="Mendeteksi posisi GPS...">
+                        <div id="gpsStatus" style="font-size: 11px; margin-top: 4px; color: var(--text-muted);">Menghitung jarak ke titik kantor...</div>
+                    </div>
+
+                    <button class="btn btn-success" onclick="kirimAbsensi()" style="padding: 14px; font-size: 16px;">Kirim Absensi Sekarang</button>
+                </div>
+            </div>
+
+            <!-- VIEW 4: USER DASHBOARD (RIWAYAT) -->
+            <div id="view-user-dashboard" class="view">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="font-size: 16px;" id="userWelcomeTitle">Riwayat Kehadiran</h3>
+                    <button class="btn btn-secondary" style="width: auto; padding: 6px 12px; font-size: 12px; margin:0;" onclick="navTo('view-home')">Keluar</button>
+                </div>
+
+                <div class="card">
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Berikut adalah status riwayat kehadiran Anda di sistem:</p>
+                    <div id="userAttendanceSummary">
+                        <!-- Summary items -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 5: ADMIN DASHBOARD -->
+            <div id="view-admin-dashboard" class="view">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="font-size: 16px;">Panel Administrator</h3>
+                    <button class="btn btn-secondary" style="width: auto; padding: 6px 12px; font-size: 12px; margin:0;" onclick="navTo('view-home')">Logout</button>
+                </div>
+
+                <!-- Pendaftaran Karyawan (Eksklusif Admin) -->
+                <div class="card" style="border-left: 4px solid var(--primary);">
+                    <h4 style="font-size: 15px; margin-bottom: 12px; color: var(--primary);">+ Pendaftaran Karyawan Baru</h4>
+                    <div class="form-group">
+                        <label>Nama Lengkap:</label>
+                        <input type="text" id="regNama" placeholder="Nama karyawan">
+                    </div>
+                    <div class="form-group">
+                        <label>Jabatan:</label>
+                        <input type="text" id="regJabatan" placeholder="Contoh: Staff Toko / Kasir">
+                    </div>
+                    <button class="btn btn-primary" onclick="daftarKaryawan()">Daftarkan Karyawan</button>
+                    <div id="regResult" style="margin-top: 10px; font-size: 12px; text-align: center; font-weight: bold;"></div>
+                </div>
+
+                <div class="card">
+                    <h4 style="font-size: 15px; margin-bottom: 10px;">Menu Kontrol Admin</h4>
+                    <button class="btn btn-secondary" onclick="window.open('https://docs.google.com/spreadsheets/', '_blank')">📊 Buka Database Google Sheets</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- BAGIAN ABSENSI -->
-    <div id="absensi" class="section active">
-        <h3>Scan Absen</h3>
-        <div class="form-group">
-            <label>Status Kehadiran:</label>
-            <select id="statusAbsen">
-                <option value="Masuk">Masuk</option>
-                <option value="Keluar">Keluar/Pulang</option>
-                <option value="Izin">Izin</option>
-            </select>
-        </div>
-        <div id="reader"></div>
-        <div class="form-group">
-            <label>Foto Selfie:</label>
-            <video id="video" autoplay playsinline></video>
-            <button type="button" class="btn" onclick="takeSnapshot()">Ambil Foto</button>
-            <canvas id="canvas" style="display:none;"></canvas>
-            <div id="snapshotPreview" style="margin-top:10px; text-align:center;"></div>
-        </div>
-        <div class="form-group">
-            <label>Lokasi GPS:</label>
-            <input type="text" id="lokasiGPS" readonly placeholder="Mendapatkan lokasi...">
-        </div>
-        <button class="btn" onclick="kirimAbsen()" style="background: #28a745;">Kirim Absensi</button>
-    </div>
-
-    <!-- BAGIAN PENDAFTARAN -->
-    <div id="register" class="section">
-        <h3>Daftar Karyawan Baru</h3>
-        <div class="form-group">
-            <label>Nama Lengkap:</label>
-            <input type="text" id="regNama" placeholder="Masukkan nama">
-        </div>
-        <div class="form-group">
-            <label>Jabatan:</label>
-            <input type="text" id="regJabatan" placeholder="Contoh: Kasir / Staff Toko">
-        </div>
-        <button class="btn" onclick="daftarKaryawan()">Daftarkan</button>
-        <div id="regResult" style="margin-top: 15px; text-align:center; font-weight:bold;"></div>
-    </div>
+    <footer>
+        Hdir @2026 — Sistem Absensi Toko Profesional
+    </footer>
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzmLbOsL8oHWvmXQpzdnnVbodKt4RYQLxfjrmR2kasVbmrlxGHohrgrKUWSkbnEfiCS_Q/exec";
+    // URL Web App Google Apps Script Anda (Ganti dengan URL deployment terbaru)
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwlpaM5Cf1-Je_977e9MS6lTJ8zU5LWVBb2-4Y6s46GpOVuKhOrOB-J6ZyvPLtgp-dM9A/exec";
+
+    // Koordinat Kantor (Contoh: Depok, Indonesia - sesuaikan dengan titik kantor Anda)
+    const OFFICE_LAT = -6.4025; 
+    const OFFICE_LNG = 106.8186;
+    const MAX_DISTANCE_METER = 500;
+
+    let currentFacingMode = "user"; // 'user' (depan) atau 'environment' (belakang)
+    let mediaStream = null;
     let fotoBase64 = "";
     let koordinatGPS = "";
-    let scannedId = "";
-    let scannedNama = "";
+    let html5QrCode = null;
+    let scannerCameraFacing = "user";
 
-    function switchTab(tabId) {
-        document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        event.currentTarget.classList.add('active');
+    // Navigasi Antar View
+    function navTo(viewId) {
+        document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
 
-        if(tabId === 'absensi') {
-            initCameraAndGPS();
+        // Reset atau inisialisasi spesifik view
+        if(viewId === 'view-absensi') {
+            initCamera();
             initScanner();
+            initGPS();
         } else {
+            stopCamera();
             stopScanner();
         }
     }
 
-    // --- INISIALISASI KAMERA & GPS ---
-    function initCameraAndGPS() {
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
-                document.getElementById('video').srcObject = stream;
-            })
-            .catch(err => alert("Gagal akses kamera: " + err));
+    function showLoading(show, text = "Memproses...") {
+        document.getElementById('loadingText').innerText = text;
+        document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+    }
 
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(position => {
-                koordinatGPS = `${position.coords.latitude}, ${position.coords.longitude}`;
-                document.getElementById('lokasiGPS').value = koordinatGPS;
-            }, error => {
-                alert("Gagal mendeteksi GPS. Pastikan izin lokasi aktif.");
-            });
+    // --- LOGIN HANDLER ---
+    function toggleLoginFields() {
+        let type = document.getElementById('loginType').value;
+        if(type === 'admin') {
+            document.getElementById('groupUserId').style.display = 'none';
+            document.getElementById('groupAdminPass').style.display = 'block';
+        } else {
+            document.getElementById('groupUserId').style.display = 'block';
+            document.getElementById('groupAdminPass').style.display = 'none';
+        }
+    }
+
+    function prosesLogin() {
+        let type = document.getElementById('loginType').value;
+        if(type === 'admin') {
+            let pass = document.getElementById('adminPassword').value;
+            if(pass === 'admin123' || pass === 'susujuragan') { // Password admin dapat disesuaikan
+                navTo('view-admin-dashboard');
+            } else {
+                alert("Password Admin Salah!");
+            }
+        } else {
+            let userId = document.getElementById('loginUserId').value.trim();
+            if(!userId) {
+                alert("Masukkan ID Karyawan Anda!");
+                return;
+            }
+            // Validasi & ambil data riwayat user dari Google Sheets
+            fetchUserData(userId);
+        }
+    }
+
+    // --- KAMERA & QR SCANNER ---
+    function initCamera() {
+        if(mediaStream) {
+            mediaStream.getTracks().forEach(track => track.stop());
+        }
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode } })
+            .then(stream => {
+                mediaStream = stream;
+                document.getElementById('videoElement').srcObject = stream;
+            })
+            .catch(err => console.log("Kamera error: " + err));
+    }
+
+    function toggleCameraFacing() {
+        currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
+        initCamera();
+    }
+
+    function stopCamera() {
+        if(mediaStream) {
+            mediaStream.getTracks().forEach(track => track.stop());
+            mediaStream = null;
         }
     }
 
     function takeSnapshot() {
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        const video = document.getElementById('videoElement');
+        const canvas = document.getElementById('canvasElement');
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        fotoBase64 = canvas.toDataURL('image/jpeg', 0.5); // Kompresi gambar
-        document.getElementById('snapshotPreview').innerHTML = `<img src="${fotoBase64}" width="150" style="border-radius:4px;"/><br><small>Foto Berhasil Diambil</small>`;
+        fotoBase64 = canvas.toDataURL('image/jpeg', 0.6);
+        document.getElementById('snapshotPreview').innerHTML = `<img src="${fotoBase64}" width="120" style="border-radius:6px; border:2px solid var(--success);"/><br><small style="color:var(--success); font-weight:bold;">✓ Foto Tersimpan</small>`;
     }
 
-    // --- QR SCANNER ---
-    let html5QrCode;
     function initScanner() {
+        if(html5QrCode) {
+            html5QrCode.stop().catch(() => {});
+        }
         html5QrCode = new Html5Qrcode("reader");
+        const config = { fps: 10, qrbox: { width: 220, height: 220 } };
         html5QrCode.start(
-            { facingMode: "user" },
-            { fps: 10, qrbox: { width: 250, height: 250 } },
-            qrCodeMessage => {
-                // Asumsi QR code berisi ID Karyawan atau format "ID|Nama"
-                scannedId = qrCodeMessage;
-                alert("QR Berhasil dipindai! ID: " + scannedId);
-                html5QrCode.stop();
+            { facingMode: scannerCameraFacing },
+            config,
+            qrMessage => {
+                document.getElementById('scannedId').value = qrMessage;
+                alert("ID Berhasil Dipindai: " + qrMessage);
             },
-            errorMessage => {}
-        ).catch(err => {
-            console.log(`QR Scanner error: ${err}`);
-        });
+            err => {}
+        ).catch(err => console.log("QR Scanner error: " + err));
+    }
+
+    function switchCameraScanner() {
+        scannerCameraFacing = scannerCameraFacing === "user" ? "environment" : "user";
+        initScanner();
     }
 
     function stopScanner() {
         if(html5QrCode) {
-            html5QrCode.stop().catch(err => {});
+            html5QrCode.stop().catch(() => {});
         }
     }
 
-    // --- SUBMIT ABSENSI ---
-    function kirimAbsen() {
-        if(!scannedId) { alert("Silakan scan QR Code Anda terlebih dahulu!"); return; }
-        if(!fotoBase64) { alert("Silakan ambil foto selfie terlebih dahulu!"); return; }
-        if(!koordinatGPS) { alert("Menunggu lokasi GPS..."); return; }
+    // --- GPS & GEOFENCING ---
+    function initGPS() {
+        const gpsInput = document.getElementById('lokasiGPS');
+        const gpsStatus = document.getElementById('gpsStatus');
+        
+        if (!navigator.geolocation) {
+            gpsInput.value = "GPS tidak didukung perangkat ini";
+            return;
+        }
+
+        gpsInput.value = "Mencari sinyal GPS...";
+        navigator.geolocation.getCurrentPosition(position => {
+            let lat = position.coords.latitude;
+            let lng = position.coords.longitude;
+            koordinatGPS = `${lat}, ${lng}`;
+            gpsInput.value = koordinatGPS;
+
+            // Hitung jarak Haversine ke titik kantor
+            let distance = calculateDistance(lat, lng, OFFICE_LAT, OFFICE_LNG);
+            if(distance <= MAX_DISTANCE_METER) {
+                gpsStatus.innerHTML = `<span style="color:var(--success); font-weight:bold;">✓ Dalam Area Kantor (Jarak: ${Math.round(distance)} meter)</span>`;
+            } else {
+                gpsStatus.innerHTML = `<span style="color:var(--danger); font-weight:bold;">✕ Di Luar Jarak Kantor (${Math.round(distance)}m). Maksimal ${MAX_DISTANCE_METER}m!</span>`;
+            }
+        }, error => {
+            gpsInput.value = "Gagal mendeteksi lokasi GPS";
+            gpsStatus.innerHTML = `<span style="color:var(--danger);">Pastikan izin lokasi/GPS aktif.</span>`;
+        }, { enableHighAccuracy: true });
+    }
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        let R = 6371e3; // Radius bumi dalam meter
+        let dLat = (lat2 - lat1) * Math.PI / 180;
+        let dLon = (lon2 - lon1) * Math.PI / 180;
+        let a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+        let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
+    // --- KIRIM ABSENSI KE BACKEND ---
+    function kirimAbsensi() {
+        let id = document.getElementById('scannedId').value.trim();
+        let status = document.getElementById('statusAbsen').value;
+
+        if(!id) { alert("Silakan scan QR Code ID Karyawan terlebih dahulu!"); return; }
+        if(!fotoBase64) { alert("Silakan ambil foto selfie verifikasi terlebih dahulu!"); return; }
+        if(!koordinatGPS) { alert("Menunggu koordinat GPS yang valid..."); return; }
+
+        showLoading(true, "Mengirim data absensi ke server...");
 
         let payload = {
             action: "attendance",
-            id: scannedId,
-            nama: scannedId, // Bisa disesuaikan jika ingin lookup nama dari ID
-            status: document.getElementById('statusAbsen').value,
+            id: id,
+            status: status,
             lokasi: koordinatGPS,
             foto: fotoBase64
         };
@@ -171,18 +435,62 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         }).then(() => {
-            alert("Absensi Berhasil Terkirim!");
-            location.reload();
-        }).catch(err => alert("Gagal mengirim absensi: " + err));
+            showLoading(false);
+            alert("Absensi Berhasil Tercatat!");
+            navTo('view-home');
+        }).catch(err => {
+            showLoading(false);
+            alert("Gagal mengirim absensi: " + err);
+        });
     }
 
-    // --- PENDAFTARAN KARYAWAN ---
+    // --- FETCH RIWAYAT USER ---
+    function fetchUserData(userId) {
+        showLoading(true, "Memuat data kehadiran...");
+        // Memanggil API Google Apps Script untuk memeriksa riwayat user hari ini
+        fetch(`${SCRIPT_URL}?action=getUserHistory&id=${userId}`)
+            .then(res => res.json())
+            .then(data => {
+                showLoading(false);
+                document.getElementById('userWelcomeTitle').innerText = `Riwayat: ${data.nama || userId}`;
+                
+                let html = `
+                    <div style="margin-bottom: 12px;"><strong>ID:</strong> ${userId}</div>
+                    <div style="margin-bottom: 12px;"><strong>Nama:</strong> ${data.nama || 'Karyawan'}</div>
+                    <hr style="border:0; border-top:1px solid var(--border-color); margin:12px 0;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span>Absen Masuk:</span>
+                        <span class="badge ${data.masuk ? 'badge-success' : 'badge-danger'}">${data.masuk || 'Belum'}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span>Absen Keluar:</span>
+                        <span class="badge ${data.keluar ? 'badge-success' : 'badge-danger'}">${data.keluar || 'Belum'}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span>Izin / Sakit:</span>
+                        <span class="badge ${data.izin ? 'badge-warning' : 'badge-danger'}">${data.izin || 'Belum'}</span>
+                    </div>
+                `;
+                document.getElementById('userAttendanceSummary').innerHTML = html;
+                navTo('view-user-dashboard');
+            })
+            .catch(err => {
+                showLoading(false);
+                // Fallback jika fetch tanpa koneksi live, langsung arahkan dengan preview
+                document.getElementById('userWelcomeTitle').innerText = `Riwayat: ${userId}`;
+                document.getElementById('userAttendanceSummary').innerHTML = `<p style="font-size:13px; color:var(--text-muted);">Data terhubung ke server Google Sheets untuk ID: <strong>${userId}</strong></p>`;
+                navTo('view-user-dashboard');
+            });
+    }
+
+    // --- PENDAFTARAN KARYAWAN (ADMIN ONLY) ---
     function daftarKaryawan() {
-        let nama = document.getElementById('regNama').value;
-        let jabatan = document.getElementById('regJabatan').value;
+        let nama = document.getElementById('regNama').value.trim();
+        let jabatan = document.getElementById('regJabatan').value.trim();
 
-        if(!nama || !jabatan) { alert("Harap isi semua kolom!"); return; }
+        if(!nama || !jabatan) { alert("Harap isi nama dan jabatan!"); return; }
 
+        showLoading(true, "Mendaftarkan karyawan baru...");
         let payload = { action: "register", nama: nama, jabatan: jabatan };
 
         fetch(SCRIPT_URL, {
@@ -191,14 +499,15 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         }).then(() => {
-            document.getElementById('regResult').innerText = "Pendaftaran Berhasil! Cek Spreadsheet.";
+            showLoading(false);
+            document.getElementById('regResult.innerText = "Pendaftaran Berhasil! ID Karyawan tergenerate di Google Sheets.";
             document.getElementById('regNama').value = "";
             document.getElementById('regJabatan').value = "";
-        }).catch(err => alert("Gagal mendaftar: " + err));
+        }).catch(err => {
+            showLoading(false);
+            alert("Gagal mendaftar: " + err);
+        });
     }
-
-    // Jalankan kamera saat halaman dibuka jika tab aktif
-    window.onload = () => { initCameraAndGPS(); initScanner(); };
 </script>
 
 </body>
