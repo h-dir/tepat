@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Absensi Toko</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f9; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #007bff; }
+        .tab { display: flex; justify-content: space-around; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+        .tab button { background: none; border: none; font-size: 16px; font-weight: bold; cursor: pointer; color: #666; }
+        .tab button.active { color: #007bff; border-bottom: 2px solid #007bff; padding-bottom: 6px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button.btn { width: 100%; background: #007bff; color: white; border: none; padding: 10px; border-radius: 4px; font-size: 16px; cursor: pointer; }
+        button.btn:hover { background: #0056b3; }
+        .section { display: none; }
+        .section.active { display: block; }
+        #reader { width: 100%; margin-bottom: 15px; }
+        video, canvas { width: 100%; border-radius: 4px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Sistem Absensi Toko</h2>
+    
+    <div class="tab">
+        <button class="tab-btn active" onclick="switchTab('absensi')">Absensi</button>
+        <button class="tab-btn" onclick="switchTab('register')">Pendaftaran Karyawan</button>
+    </div>
+
+    <!-- BAGIAN ABSENSI -->
+    <div id="absensi" class="section active">
+        <h3>Scan Absen</h3>
+        <div class="form-group">
+            <label>Status Kehadiran:</label>
+            <select id="statusAbsen">
+                <option value="Masuk">Masuk</option>
+                <option value="Keluar">Keluar/Pulang</option>
+                <option value="Izin">Izin</option>
+            </select>
+        </div>
+        <div id="reader"></div>
+        <div class="form-group">
+            <label>Foto Selfie:</label>
+            <video id="video" autoplay playsinline></video>
+            <button type="button" class="btn" onclick="takeSnapshot()">Ambil Foto</button>
+            <canvas id="canvas" style="display:none;"></canvas>
+            <div id="snapshotPreview" style="margin-top:10px; text-align:center;"></div>
+        </div>
+        <div class="form-group">
+            <label>Lokasi GPS:</label>
+            <input type="text" id="lokasiGPS" readonly placeholder="Mendapatkan lokasi...">
+        </div>
+        <button class="btn" onclick="kirimAbsen()" style="background: #28a745;">Kirim Absensi</button>
+    </div>
+
+    <!-- BAGIAN PENDAFTARAN -->
+    <div id="register" class="section">
+        <h3>Daftar Karyawan Baru</h3>
+        <div class="form-group">
+            <label>Nama Lengkap:</label>
+            <input type="text" id="regNama" placeholder="Masukkan nama">
+        </div>
+        <div class="form-group">
+            <label>Jabatan:</label>
+            <input type="text" id="regJabatan" placeholder="Contoh: Kasir / Staff Toko">
+        </div>
+        <button class="btn" onclick="daftarKaryawan()">Daftarkan</button>
+        <div id="regResult" style="margin-top: 15px; text-align:center; font-weight:bold;"></div>
+    </div>
+</div>
+
+<script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzmLbOsL8oHWvmXQpzdnnVbodKt4RYQLxfjrmR2kasVbmrlxGHohrgrKUWSkbnEfiCS_Q/exec";
+    let fotoBase64 = "";
+    let koordinatGPS = "";
+    let scannedId = "";
+    let scannedNama = "";
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+
+        if(tabId === 'absensi') {
+            initCameraAndGPS();
+            initScanner();
+        } else {
+            stopScanner();
+        }
+    }
+
+    // --- INISIALISASI KAMERA & GPS ---
+    function initCameraAndGPS() {
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                document.getElementById('video').srcObject = stream;
+            })
+            .catch(err => alert("Gagal akses kamera: " + err));
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                koordinatGPS = `${position.coords.latitude}, ${position.coords.longitude}`;
+                document.getElementById('lokasiGPS').value = koordinatGPS;
+            }, error => {
+                alert("Gagal mendeteksi GPS. Pastikan izin lokasi aktif.");
+            });
+        }
+    }
+
+    function takeSnapshot() {
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        fotoBase64 = canvas.toDataURL('image/jpeg', 0.5); // Kompresi gambar
+        document.getElementById('snapshotPreview').innerHTML = `<img src="${fotoBase64}" width="150" style="border-radius:4px;"/><br><small>Foto Berhasil Diambil</small>`;
+    }
+
+    // --- QR SCANNER ---
+    let html5QrCode;
+    function initScanner() {
+        html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start(
+            { facingMode: "user" },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            qrCodeMessage => {
+                // Asumsi QR code berisi ID Karyawan atau format "ID|Nama"
+                scannedId = qrCodeMessage;
+                alert("QR Berhasil dipindai! ID: " + scannedId);
+                html5QrCode.stop();
+            },
+            errorMessage => {}
+        ).catch(err => {
+            console.log(`QR Scanner error: ${err}`);
+        });
+    }
+
+    function stopScanner() {
+        if(html5QrCode) {
+            html5QrCode.stop().catch(err => {});
+        }
+    }
+
+    // --- SUBMIT ABSENSI ---
+    function kirimAbsen() {
+        if(!scannedId) { alert("Silakan scan QR Code Anda terlebih dahulu!"); return; }
+        if(!fotoBase64) { alert("Silakan ambil foto selfie terlebih dahulu!"); return; }
+        if(!koordinatGPS) { alert("Menunggu lokasi GPS..."); return; }
+
+        let payload = {
+            action: "attendance",
+            id: scannedId,
+            nama: scannedId, // Bisa disesuaikan jika ingin lookup nama dari ID
+            status: document.getElementById('statusAbsen').value,
+            lokasi: koordinatGPS,
+            foto: fotoBase64
+        };
+
+        fetch(SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        }).then(() => {
+            alert("Absensi Berhasil Terkirim!");
+            location.reload();
+        }).catch(err => alert("Gagal mengirim absensi: " + err));
+    }
+
+    // --- PENDAFTARAN KARYAWAN ---
+    function daftarKaryawan() {
+        let nama = document.getElementById('regNama').value;
+        let jabatan = document.getElementById('regJabatan').value;
+
+        if(!nama || !jabatan) { alert("Harap isi semua kolom!"); return; }
+
+        let payload = { action: "register", nama: nama, jabatan: jabatan };
+
+        fetch(SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        }).then(() => {
+            document.getElementById('regResult').innerText = "Pendaftaran Berhasil! Cek Spreadsheet.";
+            document.getElementById('regNama').value = "";
+            document.getElementById('regJabatan').value = "";
+        }).catch(err => alert("Gagal mendaftar: " + err));
+    }
+
+    // Jalankan kamera saat halaman dibuka jika tab aktif
+    window.onload = () => { initCameraAndGPS(); initScanner(); };
+</script>
+
+</body>
+</html>
