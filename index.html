@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HDIR Online - Sistem Absensi v4</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <title>HDIR Online - Sistem Absensi v5</title>
+    <!-- SheetJS untuk Excel Import & Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
             --primary: #2563eb;
@@ -24,7 +25,6 @@
         
         .container { max-width: 480px; width: 100%; margin: 0 auto; background: var(--card-bg); min-height: 100vh; box-shadow: 0 4px 20px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
         
-        /* Header */
         .brand-header { text-align: center; padding: 30px 20px 20px; background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); color: white; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; }
         .brand-logo { width: 70px; height: 70px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: bold; color: var(--primary); font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .brand-header h1 { font-size: 22px; font-weight: 700; margin-bottom: 5px; }
@@ -49,14 +49,28 @@
         .view { display: none; }
         .view.active { display: block; }
 
-        .camera-container, #reader { width: 100%; border-radius: 8px; overflow: hidden; background: #000; margin-bottom: 10px; min-height: 200px; display: flex; justify-content: center; align-items: center; }
+        /* Scanner Container Styling */
+        .scanner-box { width: 100%; height: 250px; background: #000; border-radius: 8px; overflow: hidden; position: relative; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; }
+        #qr-video { width: 100%; height: 100%; object-fit: cover; }
+        .scan-overlay { position: absolute; border: 2px dashed rgba(255,255,255,0.7); width: 180px; height: 180px; border-radius: 12px; pointer-events: none; }
+
+        .camera-container { width: 100%; border-radius: 8px; overflow: hidden; background: #000; margin-bottom: 10px; min-height: 200px; display: flex; justify-content: center; align-items: center; }
         video, canvas { width: 100%; border-radius: 8px; }
         
         .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 999; color: white; font-weight: bold; flex-direction: column; gap: 10px; display: none; }
         .spinner { width: 40px; height: 40px; border: 4px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        
-        iframe { width: 100%; height: 400px; border: 1px solid var(--border-color); border-radius: 8px; background: #f8fafc; }
+
+        /* Tabs Admin */
+        .admin-tabs { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
+        .tab-btn { padding: 8px 12px; font-size: 12px; font-weight: 600; border: 1px solid var(--border-color); background: #fff; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+        .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .admin-section { display: none; }
+        .admin-section.active { display: block; }
+
+        table { width: 100%; font-size: 11px; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid var(--border-color); padding: 6px; text-align: left; }
+        th { background: #f1f5f9; }
     </style>
 </head>
 <body>
@@ -130,8 +144,12 @@
 
                     <div class="form-group">
                         <label>Scan QR Code ID:</label>
-                        <div id="reader"></div>
-                        <button type="button" class="btn btn-outline" onclick="switchCameraScanner()" style="font-size: 12px; padding: 8px;">🔄 Putar Kamera Scanner</button>
+                        <div class="scanner-box">
+                            <video id="qr-video" playsinline></video>
+                            <div class="scan-overlay"></div>
+                        </div>
+                        <canvas id="qr-canvas" style="display:none;"></canvas>
+                        <button type="button" class="btn btn-outline" onclick="switchScannerCamera()" style="font-size: 12px; padding: 8px;">🔄 Putar Kamera Scanner</button>
                         <input type="text" id="scannedId" readonly placeholder="Hasil scan akan muncul di sini" style="background: #f8fafc; font-weight: bold; margin-top: 5px;">
                     </div>
 
@@ -162,9 +180,7 @@
                     <h3 id="userWelcomeTitle">Riwayat</h3>
                     <button class="btn btn-secondary" style="width: auto; padding: 6px 12px; margin:0;" onclick="navTo('view-home')">Keluar</button>
                 </div>
-                <div class="card" id="userAttendanceSummary">
-                    <!-- Data will be injected here -->
-                </div>
+                <div class="card" id="userAttendanceSummary"></div>
             </div>
 
             <!-- VIEW 5: ADMIN DASHBOARD -->
@@ -174,36 +190,89 @@
                     <button class="btn btn-secondary" style="width: auto; padding: 6px 12px; margin:0;" onclick="navTo('view-home')">Logout</button>
                 </div>
 
-                <!-- Settings Lokasi -->
-                <div class="card">
-                    <h4 style="margin-bottom: 10px; color: var(--primary);">⚙️ Seting Titik Koordinat & Radius</h4>
-                    <div class="form-group">
-                        <label>Latitude:</label>
-                        <input type="text" id="cfgLat" placeholder="Contoh: -6.4025">
-                    </div>
-                    <div class="form-group">
-                        <label>Longitude:</label>
-                        <input type="text" id="cfgLng" placeholder="Contoh: 106.8186">
-                    </div>
-                    <div class="form-group">
-                        <label>Radius Maksimal (Meter):</label>
-                        <input type="number" id="cfgRadius" placeholder="Contoh: 500">
-                    </div>
-                    <button class="btn btn-primary" onclick="simpanPengaturanGPS()">Simpan Pengaturan</button>
-                    <div id="cfgResult" style="font-size:12px; color:var(--success); text-align:center; margin-top:5px;"></div>
+                <!-- Admin Navigation Tabs -->
+                <div class="admin-tabs">
+                    <button class="tab-btn active" onclick="switchAdminTab('sec-karyawan')">👥 Karyawan</button>
+                    <button class="tab-btn" onclick="switchAdminTab('sec-gps')">📍 Pengaturan GPS</button>
+                    <button class="tab-btn" onclick="switchAdminTab('sec-db')">📊 Laporan Absensi</button>
                 </div>
 
-                <!-- DB View -->
-                <div class="card">
-                    <h4 style="margin-bottom: 10px;">📊 Database Absensi (View Only)</h4>
-                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
-                        Masukkan link Spreadsheet yang sudah di-publish ke web (File > Share > Publish to web).
-                    </p>
-                    <input type="text" id="dbLinkInput" placeholder="URL Google Sheets (Published to Web)..." style="margin-bottom: 10px;">
-                    <button class="btn btn-secondary" onclick="loadDBIframe()">Tampilkan Database</button>
-                    
-                    <div style="margin-top: 15px;">
-                        <iframe id="dbIframe" src="" style="display:none;"></iframe>
+                <!-- SECT 1: TAMBAH KARYAWAN -->
+                <div id="sec-karyawan" class="admin-section active">
+                    <div class="card">
+                        <h4 style="margin-bottom: 10px; color: var(--primary);">➕ Tambah Karyawan Baru</h4>
+                        <div class="form-group">
+                            <label>ID Karyawan:</label>
+                            <input type="text" id="newEmpId" placeholder="Contoh: EMP-001">
+                        </div>
+                        <div class="form-group">
+                            <label>Nama Lengkap:</label>
+                            <input type="text" id="newEmpName" placeholder="Contoh: Budi Santoso">
+                        </div>
+                        <button class="btn btn-primary" onclick="tambahKaryawanManual()">Simpan Karyawan</button>
+                        
+                        <hr style="margin: 15px 0; border:0; border-top:1px solid var(--border-color);">
+                        
+                        <h4 style="margin-bottom: 10px; color: var(--primary);">📁 Impor Karyawan Massal (Excel)</h4>
+                        <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Format Excel kolom A: ID_Karyawan, Kolom B: Nama</p>
+                        <input type="file" id="excelEmpFile" accept=".xlsx, .xls, .csv" style="margin-bottom: 10px; font-size: 12px;">
+                        <button class="btn btn-secondary" onclick="importExcelKaryawan()">Impor dari Excel</button>
+                    </div>
+                </div>
+
+                <!-- SECT 2: PENGATURAN GPS -->
+                <div id="sec-gps" class="admin-section">
+                    <div class="card">
+                        <h4 style="margin-bottom: 10px; color: var(--primary);">⚙️ Seting Titik Koordinat & Radius</h4>
+                        <div class="form-group">
+                            <label>Latitude:</label>
+                            <input type="text" id="cfgLat" placeholder="Contoh: -6.4025">
+                        </div>
+                        <div class="form-group">
+                            <label>Longitude:</label>
+                            <input type="text" id="cfgLng" placeholder="Contoh: 106.8186">
+                        </div>
+                        <div class="form-group">
+                            <label>Radius Maksimal (Meter):</label>
+                            <input type="number" id="cfgRadius" placeholder="Contoh: 500">
+                        </div>
+                        <button class="btn btn-primary" onclick="simpanPengaturanGPS()">Simpan Pengaturan</button>
+                        <div id="cfgResult" style="font-size:12px; color:var(--success); text-align:center; margin-top:5px;"></div>
+                    </div>
+                </div>
+
+                <!-- SECT 3: LAPORAN & VIEW ABSENSI -->
+                <div id="sec-db" class="admin-section">
+                    <div class="card">
+                        <h4 style="margin-bottom: 10px;">📊 Laporan Absensi Terpadu</h4>
+                        <div class="form-group">
+                            <label>Filter Periode:</label>
+                            <select id="filterPeriode" onchange="renderLaporanAbsensi()">
+                                <option value="hari_ini">Hari Ini</option>
+                                <option value="minggu_ini">Minggu Ini</option>
+                                <option value="bulan_ini">Bulan Ini</option>
+                                <option value="3_bulan">3 Bulan Kebelakang</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-success" onclick="exportLaporanExcel()" style="margin-bottom: 10px;">📥 Ekspor ke Excel (.xlsx)</button>
+                        
+                        <div style="overflow-x: auto; max-height: 350px;">
+                            <table id="tabelLaporan">
+                                <thead>
+                                    <tr>
+                                        <th>Waktu</th>
+                                        <th>ID</th>
+                                        <th>Nama</th>
+                                        <th>Masuk</th>
+                                        <th>Keluar</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bodyTabelLaporan">
+                                    <!-- Data injected -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -213,19 +282,33 @@
     <footer>HDIR @2026 — Sistem Absensi Profesional</footer>
 </div>
 
+<!-- Library jsQR untuk pemindaian QR code via kamera JS native -->
+<script src="https://cdn.jsdelivr.net/npm/jsQR@1.4.0/dist/jsQR.js"></script>
 <script>
-    const SCRIPT_URL = "URL_WEB_APP_GOOGLE_SCRIPT_ANDA_DISINI";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycCmg-yhHfVTxNnhY4WHWTTMjtVxz_H_A6XkbTstE5OFK9CtngsFmlf_NxBeF52gapnQ/exec";
 
-    // Global Vars
-    let currentFacingMode = "user"; // Selfie default depan
-    let scannerFacingMode = "environment"; // Scanner default belakang
+    let currentFacingMode = "user"; 
+    let scannerFacingMode = "environment"; 
     let mediaStream = null;
+    let scannerStream = null;
     let fotoBase64 = "";
     let koordinatGPS = "";
-    let html5QrCode = null;
     let isInRadius = false;
+    let scanInterval = null;
 
-    // Load GPS Settings from LocalStorage (Admin Setup)
+    function getEmployees() {
+        return JSON.parse(localStorage.getItem('db_karyawan')) || [
+            { id: "EMP-001", name: "Budi Santoso" },
+            { id: "EMP-002", name: "Siti Aminah" }
+        ];
+    }
+
+    function getAttendanceLogs() {
+        return JSON.parse(localStorage.getItem('db_absensi_logs')) || [
+            { timestamp: new Date().toISOString(), id: "EMP-001", name: "Budi Santoso", masuk: "08:00:00", keluar: "", status: "Absen Masuk" }
+        ];
+    }
+
     function getGPSSettings() {
         return {
             lat: parseFloat(localStorage.getItem('office_lat')) || -6.4025,
@@ -242,24 +325,11 @@
         setTimeout(() => document.getElementById('cfgResult').innerText = "", 3000);
     }
 
-    function loadDBIframe() {
-        const link = document.getElementById('dbLinkInput').value;
-        const iframe = document.getElementById('dbIframe');
-        if(link) {
-            iframe.src = link;
-            iframe.style.display = "block";
-            localStorage.setItem('db_link', link);
-        }
-    }
-
-    // Initialize Admin inputs
     window.onload = function() {
         const cfg = getGPSSettings();
         document.getElementById('cfgLat').value = cfg.lat;
         document.getElementById('cfgLng').value = cfg.lng;
         document.getElementById('cfgRadius').value = cfg.radius;
-        const savedDb = localStorage.getItem('db_link');
-        if(savedDb) { document.getElementById('dbLinkInput').value = savedDb; }
     }
 
     function navTo(viewId) {
@@ -268,11 +338,14 @@
 
         if(viewId === 'view-absensi') {
             initCamera();
-            initScanner();
+            initScannerCamera();
             initGPS();
         } else {
             stopCamera();
-            stopScanner();
+            stopScannerCamera();
+        }
+        if(viewId === 'view-admin-dashboard') {
+            renderLaporanAbsensi();
         }
     }
 
@@ -301,14 +374,117 @@
         }
     }
 
-    // --- SELFIE CAMERA LOGIC ---
+    function switchAdminTab(tabId) {
+        document.querySelectorAll('.admin-section').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    function tambahKaryawanManual() {
+        let id = document.getElementById('newEmpId').value.trim();
+        let name = document.getElementById('newEmpName').value.trim();
+        if(!id || !name) { alert("ID dan Nama wajib diisi!"); return; }
+        
+        let list = getEmployees();
+        if(list.some(e => e.id === id)) { alert("ID Karyawan sudah terdaftar!"); return; }
+        
+        list.push({ id, name });
+        localStorage.setItem('db_karyawan', JSON.stringify(list));
+        alert("Karyawan berhasil ditambahkan!");
+        document.getElementById('newEmpId').value = "";
+        document.getElementById('newEmpName').value = "";
+    }
+
+    function importExcelKaryawan() {
+        let fileInput = document.getElementById('excelEmpFile');
+        if(fileInput.files.length === 0) { alert("Pilih file Excel terlebih dahulu!"); return; }
+        
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                let data = new Uint8Array(e.target.result);
+                let workbook = XLSX.read(data, { type: 'array' });
+                let firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                let rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                
+                let list = getEmployees();
+                let count = 0;
+                
+                for(let i = 0; i < rows.length; i++) {
+                    let id = rows[i][0] ? String(rows[i][0]).trim() : "";
+                    let name = rows[i][1] ? String(rows[i][1]).trim() : "";
+                    if(id && name) {
+                        if(!list.some(e => e.id === id)) {
+                            list.push({ id, name });
+                            count++;
+                        }
+                    }
+                }
+                localStorage.setItem('db_karyawan', JSON.stringify(list));
+                alert(`Berhasil mengimpor ${count} karyawan baru!`);
+                fileInput.value = "";
+            } catch(err) {
+                alert("Gagal membaca file Excel: " + err.message);
+            }
+        };
+        reader.readAsArrayBuffer(fileInput.files[0]);
+    }
+
+    function initScannerCamera() {
+        stopScannerCamera();
+        const video = document.getElementById('qr-video');
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: scannerFacingMode } })
+            .then(stream => {
+                scannerStream = stream;
+                video.srcObject = stream;
+                video.setAttribute("playsinline", true);
+                video.play();
+                scanInterval = setInterval(scanQRCodeTick, 500);
+            }).catch(err => {
+                console.log("Kamera Scanner Error:", err);
+                alert("Tidak dapat mengakses kamera belakang untuk scan QR.");
+            });
+    }
+
+    function switchScannerCamera() {
+        scannerFacingMode = (scannerFacingMode === "environment") ? "user" : "environment";
+        initScannerCamera();
+    }
+
+    function stopScannerCamera() {
+        if(scanInterval) clearInterval(scanInterval);
+        if(scannerStream) {
+            scannerStream.getTracks().forEach(track => track.stop());
+            scannerStream = null;
+        }
+    }
+
+    function scanQRCodeTick() {
+        const video = document.getElementById('qr-video');
+        const canvas = document.getElementById('qr-canvas');
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvas.height = video.videoHeight;
+            canvas.width = video.videoWidth;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            let code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
+            
+            if (code) {
+                document.getElementById('scannedId').value = code.data;
+                if(navigator.vibrate) navigator.vibrate(200);
+            }
+        }
+    }
+
     function initCamera() {
         stopCamera();
         navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode } })
             .then(stream => {
                 mediaStream = stream;
                 document.getElementById('videoElement').srcObject = stream;
-            }).catch(err => console.log("Kamera error: ", err));
+            }).catch(err => console.log("Kamera Selfie error: ", err));
     }
 
     function toggleCameraFacing() {
@@ -334,45 +510,6 @@
         document.getElementById('snapshotPreview').innerHTML = `<img src="${fotoBase64}" width="150" style="border-radius:8px; border:2px solid var(--success);"/><br><small style="color:var(--success); font-weight:bold;">✓ Foto Tersimpan</small>`;
     }
 
-    // --- QR SCANNER LOGIC ---
-    function initScanner() {
-        stopScanner();
-        setTimeout(startScannerInstance, 300); // Wait for cleanup
-    }
-
-    function startScannerInstance() {
-        try {
-            html5QrCode = new Html5Qrcode("reader");
-            // Pass the string "user" or "environment" directly
-            const config = { fps: 10, qrbox: { width: 220, height: 220 } };
-            html5QrCode.start(
-                { facingMode: scannerFacingMode }, 
-                config,
-                qrMessage => {
-                    document.getElementById('scannedId').value = qrMessage;
-                    if(navigator.vibrate) navigator.vibrate(200);
-                },
-                err => {}
-            ).catch(err => {
-                console.log("Scanner start failed, retrying generic... ", err);
-            });
-        } catch(e) {
-            console.log("Scanner init error: ", e);
-        }
-    }
-
-    function switchCameraScanner() {
-        scannerFacingMode = (scannerFacingMode === "environment") ? "user" : "environment";
-        initScanner();
-    }
-
-    function stopScanner() {
-        if(html5QrCode) {
-            html5QrCode.stop().then(() => { html5QrCode.clear(); }).catch(() => {});
-        }
-    }
-
-    // --- GPS LOGIC ---
     function initGPS() {
         const gpsInput = document.getElementById('lokasiGPS');
         const gpsStatus = document.getElementById('gpsStatus');
@@ -380,7 +517,7 @@
         isInRadius = false;
         
         if (!navigator.geolocation) {
-            gpsInput.value = "GPS tidak didukung perangkat ini";
+            gpsInput.value = "GPS tidak didukung";
             return;
         }
 
@@ -414,7 +551,6 @@
         return R * c;
     }
 
-    // --- SEND DATA ---
     function kirimAbsensi() {
         let id = document.getElementById('scannedId').value.trim();
         let status = document.getElementById('statusAbsen').value;
@@ -424,42 +560,111 @@
         if(!koordinatGPS) { alert("Tunggu hingga GPS terdeteksi!"); return; }
         if(!isInRadius && status !== 'Izin/sakit') { alert("Anda berada di luar radius kantor! Tidak bisa absen."); return; }
 
+        let employees = getEmployees();
+        let emp = employees.find(e => e.id === id);
+        let empName = emp ? emp.name : id;
+
         showLoading(true, "Mencatat absensi...");
 
-        let payload = {
-            action: "attendance",
-            id: id,
-            status: status,
-            lokasi: koordinatGPS,
-            foto: fotoBase64
-        };
+        let logs = getAttendanceLogs();
+        let todayStr = new Date().toISOString().split('T')[0];
+        let existing = logs.find(l => l.id === id && l.timestamp.startsWith(todayStr));
 
-        fetch(SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "text/plain" },
-            body: JSON.stringify(payload)
-        }).then(() => {
+        if(existing) {
+            if(status === 'Absen Masuk' && existing.masuk) { alert("Sudah absen masuk hari ini!"); showLoading(false); return; }
+            if(status === 'Absen Keluar') existing.keluar = new Date().toLocaleTimeString();
+            if(status === 'Izin/sakit') existing.status = 'Izin/Sakit';
+        } else {
+            logs.push({
+                timestamp: new Date().toISOString(),
+                id: id,
+                name: empName,
+                masuk: status === 'Absen Masuk' ? new Date().toLocaleTimeString() : '',
+                keluar: status === 'Absen Keluar' ? new Date().toLocaleTimeString() : '',
+                status: status
+            });
+        }
+        localStorage.setItem('db_absensi_logs', JSON.stringify(logs));
+
+        setTimeout(() => {
             showLoading(false);
-            alert("Absensi Berhasil Terkirim!");
+            alert("Absensi Berhasil Tercatat!");
             document.getElementById('scannedId').value = "";
             document.getElementById('snapshotPreview').innerHTML = "";
             fotoBase64 = "";
             navTo('view-home');
-        }).catch(err => {
-            showLoading(false);
-            alert("Terjadi kesalahan jaringan.");
+        }, 800);
+    }
+
+    function renderLaporanAbsensi() {
+        let filter = document.getElementById('filterPeriode').value;
+        let logs = getAttendanceLogs();
+        let tbody = document.getElementById('bodyTabelLaporan');
+        tbody.innerHTML = "";
+
+        let now = new Date();
+        let filtered = logs.filter(item => {
+            let itemDate = new Date(item.timestamp);
+            if(filter === 'hari_ini') {
+                return itemDate.toDateString() === now.toDateString();
+            } else if(filter === 'minggu_ini') {
+                let firstDayOfWeek = new Date(now);
+                firstDayOfWeek.setDate(now.getDate() - now.getDay());
+                return itemDate >= firstDayOfWeek;
+            } else if(filter === 'bulan_ini') {
+                return itemDate.getMonth() === now.getMonth() && itemDate.getFullYear() === now.getFullYear();
+            } else if(filter === '3_bulan') {
+                let threeMonthsAgo = new Date();
+                threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+                return itemDate >= threeMonthsAgo;
+            }
+            return true;
         });
+
+        if(filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Tidak ada data pada periode ini</td></tr>`;
+            return;
+        }
+
+        filtered.forEach(row => {
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${new Date(row.timestamp).toLocaleDateString()}</td>
+                <td>${row.id}</td>
+                <td>${row.name}</td>
+                <td>${row.masuk || '-'}</td>
+                <td>${row.keluar || '-'}</td>
+                <td>${row.status}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function exportLaporanExcel() {
+        let table = document.getElementById('tabelLaporan');
+        let workbook = XLSX.utils.table_to_book(table, { sheet: "Laporan Absensi" });
+        XLSX.writeFile(workbook, `Laporan_Absensi_${document.getElementById('filterPeriode').value}.xlsx`);
     }
 
     function fetchUserData(userId) {
         showLoading(true, "Cek riwayat...");
         setTimeout(() => {
             showLoading(false);
+            let logs = getAttendanceLogs().filter(l => l.id === userId);
+            let html = `<p style="font-size:13px; margin-bottom:10px;">Riwayat Absensi untuk ID: <b>${userId}</b></p>`;
+            if(logs.length === 0) {
+                html += `<p style="color:var(--text-muted); font-size:12px;">Belum ada riwayat absensi tercatat.</p>`;
+            } else {
+                html += `<ul>`;
+                logs.forEach(l => {
+                    html += `<li style="font-size:12px; margin-bottom:5px;">${new Date(l.timestamp).toLocaleDateString()} — Masuk: ${l.masuk || '-'} | Keluar: ${l.keluar || '-'}</li>`;
+                });
+                html += `</ul>`;
+            }
             document.getElementById('userWelcomeTitle').innerText = `Riwayat: ${userId}`;
-            document.getElementById('userAttendanceSummary').innerHTML = `<p style="font-size:13px; color:var(--text-main);">Sistem akan menghubungkan ID <b>${userId}</b> ke database untuk melihat absensi Masuk, Keluar, dan Izin pada Google Sheets.</p>`;
+            document.getElementById('userAttendanceSummary').innerHTML = html;
             navTo('view-user-dashboard');
-        }, 1000);
+        }, 600);
     }
 </script>
 </body>
