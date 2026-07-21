@@ -23,13 +23,14 @@
     th,td{padding:8px;border-bottom:1px solid #f0f2f5;text-align:left;font-size:13px}
     .actions{display:flex;gap:8px}
     @media(max-width:800px){.grid{grid-template-columns:1fr}.fullwidth{grid-column:auto}}
+    .hint{font-size:12px;color:#444;margin-top:6px}
   </style>
 </head>
 <body>
   <div class="container">
     <header>
       <h1>Aplikasi Absensi — Versi Gratis</h1>
-      <div class="small">Sistem sederhana: selfie → Drive; data → Sheets</div>
+      <div class="small">Selfie → Drive; Data → Google Sheets</div>
     </header>
 
     <div class="grid">
@@ -97,6 +98,7 @@
             <button onclick="clearPreview()" class="secondary">Reset</button>
           </div>
           <div id="attMsg" class="small" style="margin-top:8px"></div>
+          <div class="hint">Catatan: Semua jenis absen wajib menyertakan selfie. Absen Masuk/Keluar memerlukan lokasi dalam radius kantor.</div>
         </div>
       </div>
 
@@ -115,7 +117,7 @@
     </div>
   </div>
 
-  <!-- QR Scanner modal (simple) -->
+  <!-- QR Scanner modal -->
   <div id="scannerModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);align-items:center;justify-content:center">
     <div style="background:#fff;padding:12px;border-radius:8px;max-width:420px;width:100%">
       <h4>Scan QR</h4>
@@ -127,12 +129,12 @@
   </div>
 
 <script>
-  // ====== Ganti SCRIPT_URL dengan Web App URL setelah deploy ======
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw1Vntxk8lF0AFi4KqDBEZVVmPZM7FYMcmGLv6yU3OiRCHPeDA87FXrmKkyZmFbIPCw/exec'; // <-- Ganti dengan URL Web App Anda
+  // ====== SCRIPT_URL sudah diisi sesuai Web App URL Anda ======
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw1Vntxk8lF0AFi4KqDBEZVVmPZM7FYMcmGLv6yU3OiRCHPeDA87FXrmKkyZmFbIPCw/exec';
 
   // Helper fetch wrapper
   async function apiPost(payload) {
-    if (!SCRIPT_URL || SCRIPT_URL.includes('https://script.google.com/macros/s/AKfycbw1Vntxk8lF0AFi4KqDBEZVVmPZM7FYMcmGLv6yU3OiRCHPeDA87FXrmKkyZmFbIPCw/exec')) {
+    if (!SCRIPT_URL || SCRIPT_URL.includes('PASTE_WEB_APP_URL')) {
       alert('SCRIPT_URL belum diatur. Ganti SCRIPT_URL di Index.html dengan URL Web App Anda.');
       throw new Error('SCRIPT_URL not set');
     }
@@ -278,10 +280,9 @@
     }, { enableHighAccuracy: true, timeout: 10000 });
   }
 
-  // QR Scanner (uses html5-qrcode if available, fallback to prompt)
+  // QR Scanner (html5-qrcode fallback to prompt)
   let html5QrcodeScanner;
   function openScanner(){
-    // Try to load html5-qrcode dynamically
     if (typeof Html5Qrcode === 'undefined') {
       const s = document.createElement('script');
       s.src = 'https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js';
@@ -320,7 +321,6 @@
     }
   }
 
-  // Init: try to stop camera on unload
   window.addEventListener('beforeunload', () => { stopCamera(); if (html5QrcodeScanner) html5QrcodeScanner.clear().catch(()=>{}); });
 </script>
 </body>
