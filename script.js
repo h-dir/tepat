@@ -19,7 +19,7 @@ async function kirimAbsensi() {
   formData.append("status", status);
   formData.append("foto", fotoFile);
 
-  const url = "YOUR_DEPLOYED_APPS_SCRIPT_URL"; // URL Web App dari Apps Script
+  const url = "https://script.google.com/macros/s/AKfycbzYiBzL-JUhVrNy6wA33p4rs65OJFgEXf-skCUxSG07zSc08t3fh1Say76QTKC0aRqJ/exec"; // URL Web App dari Apps Script
   const response = await fetch(url, { method: "POST", body: formData });
   const result = await response.json();
   alert(result.message);
