@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Absensi Karyawan</title>
+</head>
+<body>
+  <h2>Scan QR Code</h2>
+  <input type="text" id="qrInput" placeholder="Masukkan QR Code">
+  <p>Nama: <span id="nama"></span></p>
+  <p>Departemen: <span id="departemen"></span></p>
+
+  <h3>Ambil Foto Selfie</h3>
+  <input type="file" id="foto" accept="image/*" capture="camera">
+  <img id="preview" width="200">
+
+  <h3>Pilih Status</h3>
+  <select id="status">
+    <option value="Masuk">Absen Masuk</option>
+    <option value="Keluar">Absen Keluar</option>
+    <option value="Izin">Izin</option>
+    <option value="Cuti">Cuti</option>
+    <option value="WFH">WFH</option>
+  </select>
+
+  <button onclick="kirimAbsensi()">Kirim</button>
+
+  <script src="script.js"></script>
+</body>
+</html>
